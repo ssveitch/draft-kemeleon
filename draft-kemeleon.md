@@ -11,9 +11,7 @@ consensus: true
 v: 3
 # area: AREA
 # workgroup: WG Working Group
-keyword:
- - encoding
- - key encapsulation mechanism
+keyword: Internet-Draft
 venue:
 #  group: WG
 #  type: Working Group
