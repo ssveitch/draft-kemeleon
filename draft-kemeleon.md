@@ -2,9 +2,6 @@
 ###
 # Internet-Draft Markdown Template
 #
-# Rename this file from draft-todo-yourname-protocol.md to get started.
-# Draft name format is "draft-<yourname>-<workgroup>-<name>.md".
-#
 # For initial setup, you only need to edit the first block of fields.
 # Only "title" needs to be changed; delete "abbrev" if your title is short.
 # Any other content can be edited, but be careful not to introduce errors.
@@ -19,11 +16,11 @@
 # Change the file extension to match the format (.xml for XML, etc...)
 #
 ###
-title: "TODO - Your title"
-abbrev: "TODO - Abbreviation"
+title: "Kemeleon Encodings"
+abbrev: "Kemeleon"
 category: info
 
-docname: draft-todo-yourname-protocol-latest
+docname: draft-kemeleon
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
@@ -32,22 +29,31 @@ v: 3
 area: AREA
 workgroup: WG Working Group
 keyword:
- - next generation
- - unicorn
- - sparkling distributed ledger
+ - encoding
+ - key encapsulation mechanism
 venue:
   group: WG
   type: Working Group
   mail: WG@example.com
   arch: https://example.com/WG
-  github: USER/REPO
+  github: ssveitch/draft-kemeleon
   latest: https://example.com/LATEST
 
 author:
  -
-    fullname: Your Name Here
-    organization: Your Organization Here
-    email: your.email@example.com
+    fullname: Felix Günther
+    organization: IBM Research - Zurich
+    email: mail@felixguenther.info
+
+ -
+    fullname: Douglas Stebila
+    organization: University of Waterloo
+    email: dstebila@uwaterloo.ca
+
+ -
+    fullname: Shannon Veitch
+    organization: ETH Zurich
+    email: shannon.veitch@inf.ethz.ch
 
 normative:
 
@@ -56,8 +62,7 @@ informative:
 
 --- abstract
 
-TODO Abstract
-
+This document specifies algorithms for encoding ML-KEM public keys and ciphertexts as random bitstrings. This document is a product of the Crypto Forum Research Group (CFRG) in the IRTF.
 
 --- middle
 
