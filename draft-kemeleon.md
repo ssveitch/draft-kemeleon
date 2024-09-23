@@ -9,18 +9,18 @@ number:
 date:
 consensus: true
 v: 3
-area: AREA
-workgroup: WG Working Group
+# area: AREA
+# workgroup: WG Working Group
 keyword:
  - encoding
  - key encapsulation mechanism
 venue:
-  group: WG
-  type: Working Group
-  mail: WG@example.com
-  arch: https://example.com/WG
-  github: ssveitch/draft-kemeleon
-  latest: https://example.com/LATEST
+#  group: WG
+#  type: Working Group
+#  mail: WG@example.com
+#  arch: https://example.com/WG
+  github: "ssveitch/draft-kemeleon"
+  latest: "https://ssveitch.github.io/draft-kemeleon/draft-kemeleon.html"
 
 author:
  -
