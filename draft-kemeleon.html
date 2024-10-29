@@ -9,14 +9,16 @@
 <meta content="Douglas Stebila" name="author">
 <meta content="Shannon Veitch" name="author">
 <meta content="
-       This document specifies algorithms for encoding ML-KEM public keys and ciphertexts as random bitstrings. This document is a product of the Crypto Forum Research Group (CFRG) in the IRTF. 
+       This document specifies algorithms for encoding ML-KEM public keys and ciphertexts as random bytestrings.
+Kemeleon encodings provide obfuscation of public keys and ciphertexts, relying on module LWE assumptions.
+This document specifies a number of variants of these encodings, with differing rejection rates and output sizes. 
     " name="description">
-<meta content="xml2rfc 3.23.1" name="generator">
+<meta content="xml2rfc 3.23.2" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-kemeleon-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.23.1
-    Python 3.12.6
+  xml2rfc 3.23.2
+    Python 3.12.7
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.1.0
@@ -163,31 +165,6 @@
 }
 
 @font-face {
-  font-family: 'Cabin Condensed';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-vietnamese.woff2') format('woff2');
-  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
-}
-@font-face {
-  font-family: 'Cabin Condensed';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: 'Cabin Condensed';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: local('Cabin Condensed SemiBold'), local('CabinCondensed-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/cabincondensed-semibold-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
   font-family: 'Oxygen Mono';
   font-style: normal;
   font-weight: 400;
@@ -204,6 +181,77 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: italic;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic-ext.woff2') format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-cyrillic.woff2') format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-greek.woff2') format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Sofia Sans Semi Condensed';
+  font-style: normal;
+  font-weight: 1 1000;
+  src: url('https://martinthomson.github.io/rfc-css/fonts/sofiasanssemicondensed-regular-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   color-scheme: light dark;
   --background-color: #fff;
@@ -216,6 +264,7 @@
   --pilcrow-strong: #bbb;
   --small-font-size: 14.5px;
   --font-mono: 'Oxygen Mono', monospace;
+  --font-title: "Sofia Sans Semi Condensed", sans-serif;
   scrollbar-color: #bbb #eee;
 }
 body {
@@ -234,8 +283,8 @@ body {
 
 /* headings */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Cabin Condensed", sans-serif;
-  font-weight: 600;
+  font-family: var(--font-title);
+  font-weight: 680;
   margin: 0.8em 0 0.3em;
   font-size-adjust: 0.5;
   color: var(--title-color);
@@ -643,6 +692,12 @@ sub, sup {
   padding: 0.75em 0 2em 0;
   margin-bottom: 1em;
 }
+@media screen {
+  #toc nav {
+    font-family: var(--font-title);
+    font-weight: 360;
+  }
+}
 #toc nav ul {
   margin: 0 0.5em 0 0;
   padding: 0;
@@ -1026,11 +1081,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Kemeleon</td>
-<td class="right">September 2024</td>
+<td class="right">October 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Günther, et al.</td>
-<td class="center">Expires 27 March 2025</td>
+<td class="center">Expires 2 May 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1043,12 +1098,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-kemeleon-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-09-23" class="published">23 September 2024</time>
+<time datetime="2024-10-29" class="published">29 October 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-03-27">27 March 2025</time></dd>
+<dd class="expires"><time datetime="2025-05-02">2 May 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1069,7 +1124,9 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <h1 id="title">Kemeleon Encodings</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document specifies algorithms for encoding ML-KEM public keys and ciphertexts as random bitstrings. This document is a product of the Crypto Forum Research Group (CFRG) in the IRTF.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document specifies algorithms for encoding ML-KEM public keys and ciphertexts as random bytestrings.
+Kemeleon encodings provide obfuscation of public keys and ciphertexts, relying on module LWE assumptions.
+This document specifies a number of variants of these encodings, with differing rejection rates and output sizes.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1101,7 +1158,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 27 March 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 2 May 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1137,19 +1194,67 @@ svg :is([fill="white"], [fill^="#fff"]) {
             <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.3.1" class="keepWithNext"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-notation-ml-kem-background" class="internal xref">Notation / ML-KEM Background</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-kemeleon-encoding" class="internal xref">Kemeleon encoding</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-common-functions" class="internal xref">Common functions</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-encoding-public-keys" class="internal xref">Encoding public keys</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3">
+                <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-encoding-ciphertexts" class="internal xref">Encoding ciphertexts</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
+                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-deterministic-variant" class="internal xref">Deterministic variant</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5">
+                <p id="section-toc.1-1.4.2.5.1"><a href="#section-4.5" class="auto internal xref">4.5</a>.  <a href="#name-faster-arithmetic-variant" class="internal xref">Faster arithmetic variant</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.6">
+                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-non-rejection-sampling-vari" class="internal xref">Non-rejection sampling variant</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.7">
+                <p id="section-toc.1-1.4.2.7.1"><a href="#section-4.7" class="auto internal xref">4.7</a>.  <a href="#name-summary-of-encodings" class="internal xref">Summary of encodings</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-obfuscated-kems" class="internal xref">Obfuscated KEMs</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-randomness-sampling" class="internal xref">Randomness sampling</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-timing-side-channels" class="internal xref">Timing side-channels</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="auto internal xref">8.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1160,7 +1265,15 @@ svg :is([fill="white"], [fill^="#fff"]) {
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">TODO Introduction<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-1">ML-KEM <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span> is a post-quantum key-encapsulation mechanism (KEM) recently standardized by NIST,
+Many applications are transitioning from classical Diffie-Hellman (DH) based solutions to constructions based on ML-KEM.
+Meanwhile, the use of Elligator and related Hash-to-Curve <span>[<a href="#RFC9380" class="cite xref">RFC9380</a>]</span> algorithms are ubiquitous in DH-based protocols where DH shares are required to be encoded as random bytestrings.
+For example, applications using Elligator include protocols used for censorship circumvention in Tor <span>[<a href="#OBFS4" class="cite xref">OBFS4</a>]</span>, password-authenticated key exchange (PAKE) protocols <span>[<a href="#CPACE" class="cite xref">CPACE</a>]</span> <span>[<a href="#OPAQUE" class="cite xref">OPAQUE</a>]</span>, private set intersection (PSI) <span>[<a href="#ECDH-PSI" class="cite xref">ECDH-PSI</a>]</span>, and more.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">In the KEM-based setting, an analogous encoding for KEM public keys and ciphertexts to random bytestrings is required.
+This document specifies such an encoding, namely Kemeleon, for ML-KEM public keys and ciphertexts.
+The construction originates from <span>[<a href="#GSV24" class="cite xref">GSV24</a>]</span>, where the encoding was required for a post-quantum obfuscated KEM construction.
+Beyond the default construction, this document additionally specifies variants that allow for a deterministic encoding, avoid rejection sampling, and avoid larger integer computations.
+Aside from these variants, it is notable that the public key encoding results in smaller public key representations than in the current specification of ML-KEM.<a href="#section-1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="conventions-and-definitions">
@@ -1174,43 +1287,309 @@ described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</s
 appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="security-considerations">
+<div id="notation-ml-kem-background">
 <section id="section-3">
-      <h2 id="name-security-considerations">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      <h2 id="name-notation-ml-kem-background">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-notation-ml-kem-background" class="section-name selfRef">Notation / ML-KEM Background</a>
       </h2>
-<p id="section-3-1">TODO Security<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-1">A KEM consists of three algorithms:<a href="#section-3-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3-2.1">
+          <p id="section-3-2.1.1">'KeyGen() -&gt; (ek, dk)': A probabilistic key generation algorithm that, with no input, generates a public (encapsulation) key 'ek' and a secret (decapsulation) key 'dk'.<a href="#section-3-2.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-2.2">
+          <p id="section-3-2.2.1">'Encaps(ek) -&gt; (c, K)': A probabilistic encapsulation algorithm that takes as input a public key 'ek', and outputs a ciphertext 'ct' and shared secret key 'K'.<a href="#section-3-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-2.3">
+          <p id="section-3-2.3.1">'Decaps(dk, c) -&gt; K': A decapsulation algorithm that takes as input a secret key 'dk' and ciphertext 'c', and outputs a shared secret key 'K'.<a href="#section-3-2.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-3-3">TODO:
+* ML-KEM specifics (q, compress, decompress, ...)<a href="#section-3-3" class="pilcrow">¶</a></p>
+<p id="section-3-4"><code>ML-KEM.KeyGen()</code> (Section 7.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces a public key, <code>ek</code>, (termed an encapsulation key in <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) and a private key, <code>dk</code>, (decapsulation key).
+Public keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix <code>A</code>.
+<code>ML-KEM.Encaps(ek)</code> (Section 7.2 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces ciphertexts consisting of byte-encoded compressed vectors of cofficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">The following terms and notation are used throughout this document:<a href="#section-3-5" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3-6.1">
+          <p id="section-3-6.1.1"><code>msb(x)</code> refers to the most significant bit of the value x<a href="#section-3-6.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-6.2">
+          <p id="section-3-6.2.1"><code>a[i]</code> denotes the <code>i</code>th position of a vector <code>a</code> of coefficients<a href="#section-3-6.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-6.3">
+          <p id="section-3-6.3.1"><code>concat(x0, ..., xN)</code>: returns the concatenation of bytestrings.<a href="#section-3-6.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+</section>
+</div>
+<div id="kemeleon-encoding">
+<section id="section-4">
+      <h2 id="name-kemeleon-encoding">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-kemeleon-encoding" class="section-name selfRef">Kemeleon encoding</a>
+      </h2>
+<p id="section-4-1">At a high level, the constructions in this document instantiate the following functions:<a href="#section-4-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4-2.1">
+          <p id="section-4-2.1.1"><code>EncodePk(ek) -&gt; eek</code> is the (possibly randomized) encoding algorithm that on input a public key, outputs an obfuscated public key or an error.<a href="#section-4-2.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-4-2.2">
+          <p id="section-4-2.2.1"><code>DecodePk(eek) -&gt; ek</code> is the deterministic decoding algorithm that on input an obfuscated public key, outputs a public key.<a href="#section-4-2.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-4-2.3">
+          <p id="section-4-2.3.1"><code>EncodeCtxt(c) -&gt; ec</code> is the (possibly randomized) encoding algorithm that on input a ciphertext, outputs an obfuscated ciphertext or an error.<a href="#section-4-2.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-4-2.4">
+          <p id="section-4-2.4.1"><code>DecodeCtxt(ec) -&gt; c</code> is the deterministic decoding algorithm that on input an obfuscated ciphertext, outputs a ciphertext.<a href="#section-4-2.4.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<div id="common-functions">
+<section id="section-4.1">
+        <h3 id="name-common-functions">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-common-functions" class="section-name selfRef">Common functions</a>
+        </h3>
+<div class="alignLeft art-text artwork" id="section-4.1-1">
+<pre>
+VectorEncode(a):
+   r = 0
+   for i from 1 to k*n:
+      r += q^(i-1)*a[i]
+   if msb(r) == 1:
+      return err
+   else:
+      return r
+</pre><a href="#section-4.1-1" class="pilcrow">¶</a>
+</div>
+<div class="alignLeft art-text artwork" id="section-4.1-2">
+<pre>
+VectorDecode(r):
+   for i from 1 to k*n:
+      t = 0
+      for j from 1 to i-1:
+         t += a[j]
+      a[i] = (r - t)/(q^(i-1)) % q
+   return a
+</pre><a href="#section-4.1-2" class="pilcrow">¶</a>
+</div>
+<p id="section-4.1-3">The following algorithm recovers randomness from a compressed ciphertext coefficient.
+The mapping is based on the <code>Compress_d</code>, <code>Decompress_d</code> algorithms from (Section 4.2.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>).<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-4">
+<pre>
+RecoverFrom_d(u,c):
+   if d == 10:
+      if Compress_d(u - 2) == c:
+         rand &lt;--$ [-2,-1,0,1]
+      else:
+         rand &lt;--$ [-1,0,1]
+      return u + rand
+   if d == 11:
+
+   else:
+      return err
+</pre><a href="#section-4.1-4" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="encoding-public-keys">
+<section id="section-4.2">
+        <h3 id="name-encoding-public-keys">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-encoding-public-keys" class="section-name selfRef">Encoding public keys</a>
+        </h3>
+<div class="alignLeft art-text artwork" id="section-4.2-1">
+<pre>
+Kemeleon1.EncodePk(ek = (t, rho)):
+   r = VectorEncode(t)
+   if r == err:
+      return err
+   else:
+      return concat(r,rho)
+</pre><a href="#section-4.2-1" class="pilcrow">¶</a>
+</div>
+<div class="alignLeft art-text artwork" id="section-4.2-2">
+<pre>
+Kemeleon1.DecodePk(eek):
+   r,rho = eek // rho is fixed lenght
+   t = VectorDecode(r)
+   return (t, rho)
+</pre><a href="#section-4.2-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="encoding-ciphertexts">
+<section id="section-4.3">
+        <h3 id="name-encoding-ciphertexts">
+<a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-encoding-ciphertexts" class="section-name selfRef">Encoding ciphertexts</a>
+        </h3>
+<p id="section-4.3-1">TODO: complete<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-2">
+<pre>
+Kemeleon1.EncodeCtxt(c = (c_1,c_2)):
+   u = Decompress_d(c_1,d_u)
+   for i from 1 to k*n:
+      x = RecoverFrom_d(u[i],c[i])
+</pre><a href="#section-4.3-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="deterministic-variant">
+<section id="section-4.4">
+        <h3 id="name-deterministic-variant">
+<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-deterministic-variant" class="section-name selfRef">Deterministic variant</a>
+      </h3>
+</section>
+</div>
+<div id="faster-arithmetic-variant">
+<section id="section-4.5">
+        <h3 id="name-faster-arithmetic-variant">
+<a href="#section-4.5" class="section-number selfRef">4.5. </a><a href="#name-faster-arithmetic-variant" class="section-name selfRef">Faster arithmetic variant</a>
+      </h3>
+</section>
+</div>
+<div id="non-rejection-sampling-variant">
+<section id="section-4.6">
+        <h3 id="name-non-rejection-sampling-vari">
+<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-non-rejection-sampling-vari" class="section-name selfRef">Non-rejection sampling variant</a>
+      </h3>
+</section>
+</div>
+<div id="summary-of-encodings">
+<section id="section-4.7">
+        <h3 id="name-summary-of-encodings">
+<a href="#section-4.7" class="section-number selfRef">4.7. </a><a href="#name-summary-of-encodings" class="section-name selfRef">Summary of encodings</a>
+        </h3>
+<table class="center" id="table-1">
+          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Algorithm</th>
+              <th class="text-right" rowspan="1" colspan="1">pk size (bytes)</th>
+              <th class="text-right" rowspan="1" colspan="1">ct size (bytes)</th>
+              <th class="text-right" rowspan="1" colspan="1">Success probability</th>
+              <th class="text-right" rowspan="1" colspan="1">Additional considerations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Kemeleon1-512</td>
+              <td class="text-right" rowspan="1" colspan="1"> </td>
+              <td class="text-right" rowspan="1" colspan="1"> </td>
+              <td class="text-right" rowspan="1" colspan="1"> </td>
+              <td class="text-right" rowspan="1" colspan="1"> </td>
+            </tr>
+          </tbody>
+        </table>
+</section>
+</div>
+</section>
+</div>
+<div id="obfuscated-kems">
+<section id="section-5">
+      <h2 id="name-obfuscated-kems">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-obfuscated-kems" class="section-name selfRef">Obfuscated KEMs</a>
+      </h2>
+<p id="section-5-1">This section describes how to use the above specified encoding algorithms in conjunction with a KEM to produce an obfuscated KEM <span>[<a href="#GSV24" class="cite xref">GSV24</a>]</span>.<a href="#section-5-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-6">
+      <h2 id="name-security-considerations">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-6-1">This section contains additional security considerations about the Kemeleon encodings described in this document.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<div id="randomness-sampling">
+<section id="section-6.1">
+        <h3 id="name-randomness-sampling">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-randomness-sampling" class="section-name selfRef">Randomness sampling</a>
+        </h3>
+<p id="section-6.1-1">Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
+The randomness (or seed used to generate randomness) <span class="bcp14">MUST NOT</span> be derived from a public source.
+For public key encodings, randomness can be stored with the respective secret key.
+In particular, using a public source of randomness would reveal ...<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="timing-side-channels">
+<section id="section-6.2">
+        <h3 id="name-timing-side-channels">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-timing-side-channels" class="section-name selfRef">Timing side-channels</a>
+        </h3>
+<p id="section-6.2-1">(also from resampling)<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-4">
+<section id="section-7">
       <h2 id="name-iana-considerations">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-4-1">This document has no IANA actions.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">This document has no IANA actions.<a href="#section-7-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="sec-normative-references">
-<section id="section-5">
-      <h2 id="name-normative-references">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<div id="sec-combined-references">
+<section id="section-8">
+      <h2 id="name-references">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-references" class="section-name selfRef">References</a>
       </h2>
+<div id="sec-normative-references">
+<section id="section-8.1">
+        <h3 id="name-normative-references">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
 <dl class="references">
+<dt id="CPACE">[CPACE]</dt>
+        <dd>
+<span class="refAuthor">Abdalla, M.</span>, <span class="refAuthor">Haase, B.</span>, and <span class="refAuthor">J. Hesse</span>, <span class="refTitle">"CPace, a balanced composable PAKE"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-cpace-13</span>, <time datetime="2024-10-14" class="refDate">14 October 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-cpace-13">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-cpace-13</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="FIPS203">[FIPS203]</dt>
+        <dd>
+<span class="refTitle">"Module-Lattice-Based Key-Encapsulation Mechanism Standard"</span>, <span class="refContent">National Institute of Standards and Technology</span>, <span class="seriesInfo">DOI 10.6028/nist.fips.203</span>, <time datetime="2024-08" class="refDate">August 2024</time>, <span>&lt;<a href="https://doi.org/10.6028/nist.fips.203">https://doi.org/10.6028/nist.fips.203</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
-    <dd>
+        <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC9380">[RFC9380]</dt>
+      <dd>
+<span class="refAuthor">Faz-Hernandez, A.</span>, <span class="refAuthor">Scott, S.</span>, <span class="refAuthor">Sullivan, N.</span>, <span class="refAuthor">Wahby, R. S.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"Hashing to Elliptic Curves"</span>, <span class="seriesInfo">RFC 9380</span>, <span class="seriesInfo">DOI 10.17487/RFC9380</span>, <time datetime="2023-08" class="refDate">August 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9380">https://www.rfc-editor.org/rfc/rfc9380</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 </dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-8.2">
+        <h3 id="name-informative-references">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="ECDH-PSI">[ECDH-PSI]</dt>
+        <dd>
+<span class="refAuthor">wangyuchen</span>, <span class="refAuthor">Chang</span>, <span class="refAuthor">Lu, Y.</span>, <span class="refAuthor">Hong, C.</span>, and <span class="refAuthor">J. Peng</span>, <span class="refTitle">"PSI based on ECDH"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ecdh-psi-00</span>, <time datetime="2024-10-21" class="refDate">21 October 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00">https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="GSV24">[GSV24]</dt>
+        <dd>
+<span class="refAuthor">Günther, F.</span>, <span class="refAuthor">Stebila, D.</span>, and <span class="refAuthor">S. Veitch</span>, <span class="refTitle">"Obfuscated Key Exchange"</span>, <time datetime="2024" class="refDate">2024</time>, <span>&lt;<a href="https://eprint.iacr.org/2024/1086">https://eprint.iacr.org/2024/1086</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OBFS4">[OBFS4]</dt>
+        <dd>
+<span class="refTitle">"obfs4 (The obfourscator)"</span>, <span>n.d.</span>, <span>&lt;<a href="https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/-/blob/HEAD/doc/obfs4-spec.txt">https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/-/blob/HEAD/doc/obfs4-spec.txt</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="OPAQUE">[OPAQUE]</dt>
+      <dd>
+<span class="refAuthor">Bourdrez, D.</span>, <span class="refAuthor">Krawczyk, H.</span>, <span class="refAuthor">Lewi, K.</span>, and <span class="refAuthor">C. A. Wood</span>, <span class="refTitle">"The OPAQUE Augmented PAKE Protocol"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-opaque-17</span>, <time datetime="2024-09-27" class="refDate">27 September 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-opaque-17">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-opaque-17</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
 </section>
 </div>
 <div id="acknowledgments">
 <section id="appendix-A">
       <h2 id="name-acknowledgments">
-<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
       </h2>
 <p id="appendix-A-1">TODO acknowledge.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
 </section>
