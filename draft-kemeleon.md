@@ -124,8 +124,6 @@ At a high level, the constructions in this document instantiate the following fu
 - `EncodeCtxt(c) -> ec` is the (possibly randomized) encoding algorithm that on input a ciphertext, outputs an obfuscated ciphertext or an error.
 - `DecodeCtxt(ec) -> c` is the deterministic decoding algorithm that on input an obfuscated ciphertext, outputs a ciphertext.
 
-The basic encoding 
-
 ## Common functions
 
 ~~~
@@ -150,7 +148,7 @@ VectorDecode(r):
 ~~~
 
 The following algorithm recovers randomness from a compressed ciphertext coefficient.
-The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}), and depends on the value 
+The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}).
 
 ~~~
 RecoverFrom_d(u,c):
