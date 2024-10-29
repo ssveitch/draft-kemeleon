@@ -38,13 +38,8 @@ author:
 
 normative:
 
-  FIPS203:
-    target: https://doi.org/10.6028/NIST.FIPS.203
-    title: Module-Lattice-Based Key-Encapsulation Mechanism Standard
-    seriesinfo:
-      "NIST": "FIPS 203"
-    date: August 2024
-   RFC9380:
+  FIPS203: DOI.10.6028/NIST.FIPS.203
+  RFC9380:
 
 informative:
 
