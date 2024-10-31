@@ -66,7 +66,7 @@ informative:
 
 This document specifies Kemeleon encoding, algorithms for encoding ML-KEM public keys and ciphertexts as random bytestrings.
 Kemeleon encodings provide obfuscation of public keys and ciphertexts, relying on module LWE assumptions.
-This document specifies a number of variants of these encodings, with differing rejection rates, output sizes, and performance profiles.
+This document specifies a number of variants of these encodings, with differing failure rates, output sizes, and performance profiles.
 
 --- middle
 
