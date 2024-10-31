@@ -236,7 +236,7 @@ In general, the obfuscation properties of the Kemeleon encodings depend on modul
 Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
 The randomness (or seed used to generate randomness) used in Kemeleon encodings MUST be kept secret.
 In particular, public randomness allows to easily distinguish a Kemeleon-encoded value from a random bytestring:
-Decoding the value in question, re-encoding it with the public randomness, will yield the original value if it was indeed Kemeleon-encoded.
+Decoding the value in question and re-encoding it with the public randomness, will yield the original value if that was indeed Kemeleon-encoded.
 
 ## Timing Side-Channels
 Beyond timing side-channel considerations for ML-KEM itself, care should be taking when using Kemeleon encodings, in particular such with a non-zero failure probability.
