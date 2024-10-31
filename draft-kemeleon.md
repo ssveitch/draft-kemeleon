@@ -23,7 +23,7 @@ venue:
 author:
  -
     fullname: Felix Günther
-    organization: IBM Research - Zurich
+    organization: IBM Research Europe - Zurich
     email: mail@felixguenther.info
 
  -
@@ -230,13 +230,17 @@ In particular, success probabilities are as follows, for public key and cipherte
 
 This section contains additional security considerations about the Kemeleon encodings described in this document.
 
+In general, the obfuscation properties of the Kemeleon encodings depend on module LWE assumptions similar to those underlying the IND-CCA security of ML-KEM; see {{GSV24}} for the detailed security analysis of the original Kemeleon encoding.
+
 ## Randomness Sampling
 Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
-The randomness (or seed used to generate randomness) must not be derived from a public source.
-In particular, public randomness would enable distinguishing a Kemeleon-encoded value from a random bitstring.
+The randomness (or seed used to generate randomness) used in Kemeleon encodings MUST be kept secret.
+In particular, public randomness allows to easily distinguish a Kemeleon-encoded value from a random bytestring:
+Decoding the value in question, re-encoding it with the public randomness, will yield the original value if it was indeed Kemeleon-encoded.
 
 ## Timing Side-Channels
-(also from resampling)
+Beyond timing side-channel considerations for ML-KEM itself, care should be taking when using Kemeleon encodings, in particular such with a non-zero failure probability.
+Rejecting and re-generating public keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.
 
 
 # IANA Considerations
