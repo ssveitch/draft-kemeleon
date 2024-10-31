@@ -101,11 +101,12 @@ Aside from these variants, it is notable that the Kemeleon encodings of public k
 
 A KEM consists of three algorithms:
 
-- 'KeyGen() -> (pk, sk)': A probabilistic key generation algorithm that, with no input, generates a public key 'pk' and a secret key 'sk'.
-- 'Encaps(pk) -> (c, K)': A probabilistic encapsulation algorithm that takes as input a public key 'pk', and outputs a ciphertext 'ct' and shared secret key 'K'.
-- 'Decaps(sk, c) -> K': A decapsulation algorithm that takes as input a secret key 'sk' and ciphertext 'c', and outputs a shared secret key 'K'.
+- `KeyGen() -> (pk, sk)`: A probabilistic key generation algorithm that, with no input, generates a public key `pk` and a secret key `sk`.
+- `Encaps(pk) -> (c, K)`: A probabilistic encapsulation algorithm that takes as input a public key `pk`, and outputs a ciphertext `ct` and shared secret key `K`.
+- `Decaps(sk, c) -> K`: A decapsulation algorithm that takes as input a secret key `sk` and ciphertext `c`, and outputs a shared secret key `K`.
 
 The following variables and functions are adopted from {{FIPS203}}:
+
 - `q = 3329`
 - `Compress_d : x -> round((2d/q)*x) mod 2d` (Equation 4.7)
 - `Decompress_d : y -> round((q/2d)*y)` (Equation 4.8)
@@ -209,6 +210,7 @@ Then, note that rather than accumulating values to a large integer mod `q^(k*n)`
 The output size of the encoding does not change, but this results in an increased rejection rate.
 
 In particular, success probabilities are as follows, for public key and ciphertext encodings:
+
 | Parameter     | Pk success probability | Ctxt success probability |
 | :------------ | ---------------------: |  ----------------------: |
 | ML-KEM-512    |                  0.49  |                          |
