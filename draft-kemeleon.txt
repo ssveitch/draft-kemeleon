@@ -20,7 +20,7 @@ Abstract
    ML-KEM public keys and ciphertexts as random bytestrings.  Kemeleon
    encodings provide obfuscation of public keys and ciphertexts, relying
    on module LWE assumptions.  This document specifies a number of
-   variants of these encodings, with differing rejection rates, output
+   variants of these encodings, with differing failure rates, output
    sizes, and performance profiles.
 
 About This Document
