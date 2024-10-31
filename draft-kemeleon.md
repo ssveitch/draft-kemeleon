@@ -41,6 +41,15 @@ normative:
   FIPS203: DOI.10.6028/NIST.FIPS.203
   RFC9380:
 
+  ELL2:
+    title: "Elligator Squared: Uniform Points on Elliptic Curves of Prime Order as Uniform Random Strings"
+    target: https://eprint.iacr.org/2014/043
+    date: 2014
+    author:
+      -
+        ins: M. Tibouchi
+        name:  Mehdi Tibouchi
+
 informative:
 
    OBFS4:
@@ -75,7 +84,7 @@ This document specifies a number of variants of these encodings, with differing 
 ML-KEM {{FIPS203}} is a post-quantum key-encapsulation mechanism (KEM) recently standardized by NIST,
 Many applications are transitioning from classical Diffie-Hellman (DH) based solutions to constructions based on ML-KEM.
 The use of Elligator and related Hash-to-Curve {{RFC9380}} algorithms are ubiquitous in DH-based protocols where DH shares are required to be encoded as, and look indistinguishable from, random bytestrings.
-For example, applications using Elligator include protocols used for censorship circumvention in Tor {{OBFS4}}, password-authenticated key exchange (PAKE) protocols {{!CPACE=I-D.irtf-cfrg-cpace}} {{?OPAQUE=I-D.irtf-cfrg-opaque}}, and private set intersection (PSI) {{?ECDH-PSI=I-D.ecdh-psi}}.
+For example, applications using Elligator include protocols used for censorship circumvention in Tor {{OBFS4}}, password-authenticated key exchange (PAKE) protocols {{?CPACE=I-D.irtf-cfrg-cpace}} {{?OPAQUE=I-D.irtf-cfrg-opaque}}, and private set intersection (PSI) {{?ECDH-PSI=I-D.ecdh-psi}}.
 
 For the post-quantum transition, an analogous encoding for (ML-)KEM public keys and ciphertexts to random bytestrings is required.
 This document specifies such an encoding, Kemeleon, for ML-KEM public keys and ciphertexts.
@@ -90,19 +99,20 @@ Aside from these variants, it is notable that the Kemeleon encodings of public k
 
 # Notation / ML-KEM Background
 
-
 A KEM consists of three algorithms:
 
-- 'KeyGen() -> (ek, dk)': A probabilistic key generation algorithm that, with no input, generates a public (encapsulation) key 'ek' and a secret (decapsulation) key 'dk'.
-- 'Encaps(ek) -> (c, K)': A probabilistic encapsulation algorithm that takes as input a public key 'ek', and outputs a ciphertext 'ct' and shared secret key 'K'.
-- 'Decaps(dk, c) -> K': A decapsulation algorithm that takes as input a secret key 'dk' and ciphertext 'c', and outputs a shared secret key 'K'.
+- 'KeyGen() -> (pk, sk)': A probabilistic key generation algorithm that, with no input, generates a public key 'pk' and a secret key 'sk'.
+- 'Encaps(pk) -> (c, K)': A probabilistic encapsulation algorithm that takes as input a public key 'pk', and outputs a ciphertext 'ct' and shared secret key 'K'.
+- 'Decaps(sk, c) -> K': A decapsulation algorithm that takes as input a secret key 'sk' and ciphertext 'c', and outputs a shared secret key 'K'.
 
-TODO:
-* ML-KEM specifics (q, compress, decompress, ...)
+The following variables and functions are adopted from {{FIPS203}}:
+- `q = 3329`
+- `Compress_d : x -> round((2d/q)*x) mod 2d` (Equation 4.7)
+- `Decompress_d : y -> round((q/2d)*y)` (Equation 4.8)
 
-`ML-KEM.KeyGen()` (Section 7.1 {{FIPS203}}) produces a public key, `ek`, (termed an encapsulation key in {{FIPS203}}) and a private key, `dk`, (decapsulation key).
+`ML-KEM.KeyGen()` (Section 7.1 {{FIPS203}}) produces a public key, `pk`, (termed an encapsulation key in {{FIPS203}}) and a private key, `sk`, (decapsulation key).
 Public keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix `A`.
-`ML-KEM.Encaps(ek)` (Section 7.2 {{FIPS203}}) produces ciphertexts consisting of byte-encoded compressed vectors of cofficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).
+`ML-KEM.Encaps(pk)` (Section 7.2 {{FIPS203}}) produces ciphertexts consisting of byte-encoded compressed vectors of cofficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).
 
 The following terms and notation are used throughout this document:
 
@@ -110,16 +120,16 @@ The following terms and notation are used throughout this document:
 - `a[i]` denotes the `i`th position of a vector `a` of coefficients
 - `concat(x0, ..., xN)`: returns the concatenation of bytestrings.
 
-# Kemeleon encoding
+# Kemeleon Encoding
 
 At a high level, the constructions in this document instantiate the following functions:
 
-- `EncodePk(ek) -> eek` is the (possibly randomized) encoding algorithm that on input a public key, outputs an obfuscated public key or an error.
-- `DecodePk(eek) -> ek` is the deterministic decoding algorithm that on input an obfuscated public key, outputs a public key.
+- `EncodePk(pk) -> epk` is the (possibly randomized) encoding algorithm that on input a public key, outputs an obfuscated public key or an error.
+- `DecodePk(epk) -> pk` is the deterministic decoding algorithm that on input an obfuscated public key, outputs a public key.
 - `EncodeCtxt(c) -> ec` is the (possibly randomized) encoding algorithm that on input a ciphertext, outputs an obfuscated ciphertext or an error.
 - `DecodeCtxt(ec) -> c` is the deterministic decoding algorithm that on input an obfuscated ciphertext, outputs a ciphertext.
 
-## Common functions
+## Common Functions
 
 ~~~
 VectorEncode(a):
@@ -135,14 +145,12 @@ VectorEncode(a):
 ~~~
 VectorDecode(r):
    for i from 1 to k*n:
-      t = 0
-      for j from 1 to i-1:
-         t += a[j]
-      a[i] = (r - t)/(q^(i-1)) % q
+      a[i] = r % q
+      r = r // q
    return a
 ~~~
 
-The following algorithm recovers randomness from a compressed ciphertext coefficient.
+The following algorithm samples an uncompressed pre-image of a coefficient c at random.
 The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}).
 
 ~~~
@@ -159,10 +167,10 @@ RecoverFrom_d(u,c):
       return err
 ~~~
 
-## Encoding public keys
+## Encoding Public Keys
 
 ~~~
-Kemeleon1.EncodePk(ek = (t, rho)):
+Kemeleon1.EncodePk(pk = (t, rho)):
    r = VectorEncode(t)
    if r == err:
       return err
@@ -171,13 +179,13 @@ Kemeleon1.EncodePk(ek = (t, rho)):
 ~~~
 
 ~~~
-Kemeleon1.DecodePk(eek):
-   r,rho = eek // rho is fixed lenght
+Kemeleon1.DecodePk(epk):
+   r,rho = epk // rho is fixed length
    t = VectorDecode(r)
    return (t, rho)
 ~~~
 
-## Encoding ciphertexts
+## Encoding Ciphertexts
 
 TODO: complete
 
@@ -188,35 +196,44 @@ Kemeleon1.EncodeCtxt(c = (c_1,c_2)):
       x = RecoverFrom_d(u[i],c[i])
 ~~~
 
+## Non-Rejection Sampling Variant
 
-## Deterministic variant
+Applying a technique from {{ELL2}}, the original `Kemeleon` construction can be adapted to avoid rejection sampling.
 
-## Faster arithmetic variant
+## Faster Arithmetic Variant
 
-## Non-rejection sampling variant
+Observing that `q = 3329 = 13*2^8+1`, a variant of `Kemeleon` with faster integer arithmetic can be specified.
+First, the encoding rejects any polynomial with a coefficient equal to `q-1 = 3328`.
+This ensures that all arithmetic can be computed with values modulo `q-1 = 13*2^8`.
+Then, note that rather than accumulating values to a large integer mod `q^(k*n)`, it is only required to accumulate values to an integer mod `13^(k*n)`, while keeping track of the 8 lower order bits of each coefficient.
+The output size of the encoding does not change, but this results in an increased rejection rate.
 
-## Summary of encodings
+In particular, success probabilities are as follows, for public key and ciphertext encodings:
+| Parameter     | Pk success probability | Ctxt success probability | 
+| :------------ | ---------------------: |  ----------------------: | 
+| ML-KEM-512    |                  0.49  |                          | 
+| ML-KEM-768    |                  0.29  |                          |
+| ML-KEM-1024   |                  0.53  |                          |
 
-| Algorithm       | pk size (bytes) | ct size (bytes) | Success probability | Additional considerations |
-| :-------------- | --------------: | --------------: | ------------------: | ------------------------: |
-| Kemeleon1-512   |                 |                 |                     |                           |
 
-# Obfuscated KEMs
+## Summary of Encodings
 
-This section describes how to use the above specified encoding algorithms in conjunction with a KEM to produce an obfuscated KEM {{GSV24}}.
+| Algorithm       | Output size (bytes) | Success probability | Additional considerations |
+| :-------------- | ------------------: | ------------------: | ------------------------: |
+| Kemeleon        |                     |                     |                           |
+|                 |                     |                     |                           |
 
 
 # Security Considerations
 
 This section contains additional security considerations about the Kemeleon encodings described in this document.
 
-## Randomness sampling
+## Randomness Sampling
 Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
-The randomness (or seed used to generate randomness) MUST NOT be derived from a public source.
-For public key encodings, randomness can be stored with the respective secret key.
-In particular, using a public source of randomness would reveal ...
+The randomness (or seed used to generate randomness) must not be derived from a public source.
+In particular, public randomness would enable distinguishing a Kemeleon-encoded value from a random bitstring.
 
-## Timing side-channels
+## Timing Side-Channels
 (also from resampling)
 
 
