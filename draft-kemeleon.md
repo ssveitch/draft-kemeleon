@@ -64,9 +64,9 @@ informative:
 
 --- abstract
 
-This document specifies algorithms for encoding ML-KEM public keys and ciphertexts as random bytestrings.
+This document specifies Kemeleon encoding, algorithms for encoding ML-KEM public keys and ciphertexts as random bytestrings.
 Kemeleon encodings provide obfuscation of public keys and ciphertexts, relying on module LWE assumptions.
-This document specifies a number of variants of these encodings, with differing rejection rates and output sizes.
+This document specifies a number of variants of these encodings, with differing rejection rates, output sizes, and performance profiles.
 
 --- middle
 
@@ -74,14 +74,14 @@ This document specifies a number of variants of these encodings, with differing 
 
 ML-KEM {{FIPS203}} is a post-quantum key-encapsulation mechanism (KEM) recently standardized by NIST,
 Many applications are transitioning from classical Diffie-Hellman (DH) based solutions to constructions based on ML-KEM.
-Meanwhile, the use of Elligator and related Hash-to-Curve {{RFC9380}} algorithms are ubiquitous in DH-based protocols where DH shares are required to be encoded as random bytestrings.
-For example, applications using Elligator include protocols used for censorship circumvention in Tor {{OBFS4}}, password-authenticated key exchange (PAKE) protocols {{!CPACE=I-D.irtf-cfrg-cpace}} {{?OPAQUE=I-D.irtf-cfrg-opaque}}, private set intersection (PSI) {{?ECDH-PSI=I-D.ecdh-psi}}, and more.
+The use of Elligator and related Hash-to-Curve {{RFC9380}} algorithms are ubiquitous in DH-based protocols where DH shares are required to be encoded as, and look indistinguishable from, random bytestrings.
+For example, applications using Elligator include protocols used for censorship circumvention in Tor {{OBFS4}}, password-authenticated key exchange (PAKE) protocols {{!CPACE=I-D.irtf-cfrg-cpace}} {{?OPAQUE=I-D.irtf-cfrg-opaque}}, and private set intersection (PSI) {{?ECDH-PSI=I-D.ecdh-psi}}.
 
-In the KEM-based setting, an analogous encoding for KEM public keys and ciphertexts to random bytestrings is required.
-This document specifies such an encoding, namely Kemeleon, for ML-KEM public keys and ciphertexts.
-The construction originates from {{GSV24}}, where the encoding was required for a post-quantum obfuscated KEM construction.
-Beyond the default construction, this document additionally specifies variants that allow for a deterministic encoding, avoid rejection sampling, and avoid larger integer computations.
-Aside from these variants, it is notable that the public key encoding results in smaller public key representations than in the current specification of ML-KEM.
+For the post-quantum transition, an analogous encoding for (ML-)KEM public keys and ciphertexts to random bytestrings is required.
+This document specifies such an encoding, Kemeleon, for ML-KEM public keys and ciphertexts.
+Kemeleon was introduced in {{GSV24}} for building an (post-quantum) "obfuscated" KEM whose public keys and ciphertexts are indistinguishable from random.
+Beyond the original construction, this document additionally specifies variants that avoid the encoding failing or the use of large integer computations, or allow for a deterministic encoding.
+Aside from these variants, it is notable that the Kemeleon encodings of public keys results in smaller representations than in the original ML-KEM specification.
 
 # Conventions and Definitions
 
