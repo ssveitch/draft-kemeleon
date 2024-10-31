@@ -71,22 +71,20 @@ Table of Contents
    1.  Introduction
    2.  Conventions and Definitions
    3.  Notation / ML-KEM Background
-   4.  Kemeleon encoding
-     4.1.  Common functions
-     4.2.  Encoding public keys
-     4.3.  Encoding ciphertexts
-     4.4.  Deterministic variant
-     4.5.  Faster arithmetic variant
-     4.6.  Non-rejection sampling variant
-     4.7.  Summary of encodings
-   5.  Obfuscated KEMs
-   6.  Security Considerations
-     6.1.  Randomness sampling
-     6.2.  Timing side-channels
-   7.  IANA Considerations
-   8.  References
-     8.1.  Normative References
-     8.2.  Informative References
+   4.  Kemeleon Encoding
+     4.1.  Common Functions
+     4.2.  Encoding Public Keys
+     4.3.  Encoding Ciphertexts
+     4.4.  Non-Rejection Sampling Variant
+     4.5.  Faster Arithmetic Variant
+     4.6.  Summary of Encodings
+   5.  Security Considerations
+     5.1.  Randomness Sampling
+     5.2.  Timing Side-Channels
+   6.  IANA Considerations
+   7.  References
+     7.1.  Normative References
+     7.2.  Informative References
    Appendix A.  Acknowledgments
    Authors' Addresses
 
@@ -127,26 +125,28 @@ Table of Contents
 
    A KEM consists of three algorithms:
 
-   *  'KeyGen() -> (ek, dk)': A probabilistic key generation algorithm
-      that, with no input, generates a public (encapsulation) key 'ek'
-      and a secret (decapsulation) key 'dk'.
+   *  'KeyGen() -> (pk, sk)': A probabilistic key generation algorithm
+      that, with no input, generates a public key 'pk' and a secret key
+      'sk'.
 
-   *  'Encaps(ek) -> (c, K)': A probabilistic encapsulation algorithm
-      that takes as input a public key 'ek', and outputs a ciphertext
+   *  'Encaps(pk) -> (c, K)': A probabilistic encapsulation algorithm
+      that takes as input a public key 'pk', and outputs a ciphertext
       'ct' and shared secret key 'K'.
 
-   *  'Decaps(dk, c) -> K': A decapsulation algorithm that takes as
-      input a secret key 'dk' and ciphertext 'c', and outputs a shared
+   *  'Decaps(sk, c) -> K': A decapsulation algorithm that takes as
+      input a secret key 'sk' and ciphertext 'c', and outputs a shared
       secret key 'K'.
 
-   TODO: * ML-KEM specifics (q, compress, decompress, ...)
+   The following variables and functions are adopted from [FIPS203]: - q
+   = 3329 - Compress_d : x -> round((2d/q)*x) mod 2d (Equation 4.7) -
+   Decompress_d : y -> round((q/2d)*y) (Equation 4.8)
 
-   ML-KEM.KeyGen() (Section 7.1 [FIPS203]) produces a public key, ek,
-   (termed an encapsulation key in [FIPS203]) and a private key, dk,
+   ML-KEM.KeyGen() (Section 7.1 [FIPS203]) produces a public key, pk,
+   (termed an encapsulation key in [FIPS203]) and a private key, sk,
    (decapsulation key).  Public keys consist of byte-encoded vectors of
    coefficients in Z_q, where each coefficient is encoded in 12 bits,
    together with a 32-byte seed for generating the matrix A.  ML-
-   KEM.Encaps(ek) (Section 7.2 [FIPS203]) produces ciphertexts
+   KEM.Encaps(pk) (Section 7.2 [FIPS203]) produces ciphertexts
    consisting of byte-encoded compressed vectors of cofficients, where
    each coefficient in Z_q is compressed by a certain number of bits
    (depending on the ML-KEM parameter set).
@@ -159,16 +159,16 @@ Table of Contents
 
    *  concat(x0, ..., xN): returns the concatenation of bytestrings.
 
-4.  Kemeleon encoding
+4.  Kemeleon Encoding
 
    At a high level, the constructions in this document instantiate the
    following functions:
 
-   *  EncodePk(ek) -> eek is the (possibly randomized) encoding
+   *  EncodePk(pk) -> epk is the (possibly randomized) encoding
       algorithm that on input a public key, outputs an obfuscated public
       key or an error.
 
-   *  DecodePk(eek) -> ek is the deterministic decoding algorithm that
+   *  DecodePk(epk) -> pk is the deterministic decoding algorithm that
       on input an obfuscated public key, outputs a public key.
 
    *  EncodeCtxt(c) -> ec is the (possibly randomized) encoding
@@ -178,7 +178,7 @@ Table of Contents
    *  DecodeCtxt(ec) -> c is the deterministic decoding algorithm that
       on input an obfuscated ciphertext, outputs a ciphertext.
 
-4.1.  Common functions
+4.1.  Common Functions
 
    VectorEncode(a):
       r = 0
@@ -191,14 +191,12 @@ Table of Contents
 
    VectorDecode(r):
       for i from 1 to k*n:
-         t = 0
-         for j from 1 to i-1:
-            t += a[j]
-         a[i] = (r - t)/(q^(i-1)) % q
+         a[i] = r % q
+         r = r // q
       return a
 
-   The following algorithm recovers randomness from a compressed
-   ciphertext coefficient.  The mapping is based on the Compress_d,
+   The following algorithm samples an uncompressed pre-image of a
+   coefficient c at random.  The mapping is based on the Compress_d,
    Decompress_d algorithms from (Section 4.2.1 [FIPS203]).
 
    RecoverFrom_d(u,c):
@@ -213,21 +211,21 @@ Table of Contents
       else:
          return err
 
-4.2.  Encoding public keys
+4.2.  Encoding Public Keys
 
-   Kemeleon1.EncodePk(ek = (t, rho)):
+   Kemeleon1.EncodePk(pk = (t, rho)):
       r = VectorEncode(t)
       if r == err:
          return err
       else:
          return concat(r,rho)
 
-   Kemeleon1.DecodePk(eek):
-      r,rho = eek // rho is fixed lenght
+   Kemeleon1.DecodePk(epk):
+      r,rho = epk // rho is fixed length
       t = VectorDecode(r)
       return (t, rho)
 
-4.3.  Encoding ciphertexts
+4.3.  Encoding Ciphertexts
 
    TODO: complete
 
@@ -236,59 +234,69 @@ Table of Contents
       for i from 1 to k*n:
          x = RecoverFrom_d(u[i],c[i])
 
-4.4.  Deterministic variant
+4.4.  Non-Rejection Sampling Variant
 
-4.5.  Faster arithmetic variant
+   Applying a technique from [ELL2], the original Kemeleon construction
+   can be adapted to avoid rejection sampling.
 
-4.6.  Non-rejection sampling variant
+4.5.  Faster Arithmetic Variant
 
-4.7.  Summary of encodings
+   Observing that q = 3329 = 13*2^8+1, a variant of Kemeleon with faster
+   integer arithmetic can be specified.  First, the encoding rejects any
+   polynomial with a coefficient equal to q-1 = 3328.  This ensures that
+   all arithmetic can be computed with values modulo q-1 = 13*2^8.
+   Then, note that rather than accumulating values to a large integer
+   mod q^(k*n), it is only required to accumulate values to an integer
+   mod 13^(k*n), while keeping track of the 8 lower order bits of each
+   coefficient.  The output size of the encoding does not change, but
+   this results in an increased rejection rate.
 
-   +===============+=========+=========+=============+================+
-   | Algorithm     | pk size | ct size |     Success |     Additional |
-   |               | (bytes) | (bytes) | probability | considerations |
-   +===============+=========+=========+=============+================+
-   | Kemeleon1-512 |         |         |             |                |
-   +---------------+---------+---------+-------------+----------------+
+   In particular, success probabilities are as follows, for public key
+   and ciphertext encodings: | Parameter | Pk success probability | Ctxt
+   success probability | | :------------ | ---------------------: |
+   ----------------------: | | ML-KEM-512 | 0.49 | | | ML-KEM-768 |
+   0.29 | | | ML-KEM-1024 | 0.53 | |
+
+4.6.  Summary of Encodings
+
+    +===========+=====================+=============+================+
+    | Algorithm | Output size (bytes) |     Success |     Additional |
+    |           |                     | probability | considerations |
+    +===========+=====================+=============+================+
+    | Kemeleon  |                     |             |                |
+    +-----------+---------------------+-------------+----------------+
+    +-----------+---------------------+-------------+----------------+
 
                                  Table 1
 
-5.  Obfuscated KEMs
-
-   This section describes how to use the above specified encoding
-   algorithms in conjunction with a KEM to produce an obfuscated KEM
-   [GSV24].
-
-6.  Security Considerations
+5.  Security Considerations
 
    This section contains additional security considerations about the
    Kemeleon encodings described in this document.
 
-6.1.  Randomness sampling
+5.1.  Randomness Sampling
 
    Both public key and ciphertext encodings in the original Kemeleon
    encoding are randomized.  The randomness (or seed used to generate
-   randomness) MUST NOT be derived from a public source.  For public key
-   encodings, randomness can be stored with the respective secret key.
-   In particular, using a public source of randomness would reveal ...
+   randomness) must not be derived from a public source.  In particular,
+   public randomness would enable distinguishing a Kemeleon-encoded
+   value from a random bitstring.
 
-6.2.  Timing side-channels
+5.2.  Timing Side-Channels
 
    (also from resampling)
 
-7.  IANA Considerations
+6.  IANA Considerations
 
    This document has no IANA actions.
 
-8.  References
+7.  References
 
-8.1.  Normative References
+7.1.  Normative References
 
-   [CPACE]    Abdalla, M., Haase, B., and J. Hesse, "CPace, a balanced
-              composable PAKE", Work in Progress, Internet-Draft, draft-
-              irtf-cfrg-cpace-13, 14 October 2024,
-              <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
-              cpace-13>.
+   [ELL2]     Tibouchi, M., "Elligator Squared: Uniform Points on
+              Elliptic Curves of Prime Order as Uniform Random Strings",
+              2014, <https://eprint.iacr.org/2014/043>.
 
    [FIPS203]  "Module-Lattice-Based Key-Encapsulation Mechanism
               Standard", National Institute of Standards and Technology,
@@ -309,7 +317,13 @@ Table of Contents
               DOI 10.17487/RFC9380, August 2023,
               <https://www.rfc-editor.org/rfc/rfc9380>.
 
-8.2.  Informative References
+7.2.  Informative References
+
+   [CPACE]    Abdalla, M., Haase, B., and J. Hesse, "CPace, a balanced
+              composable PAKE", Work in Progress, Internet-Draft, draft-
+              irtf-cfrg-cpace-13, 14 October 2024,
+              <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
+              cpace-13>.
 
    [ECDH-PSI] wangyuchen, Chang, Lu, Y., Hong, C., and J. Peng, "PSI
               based on ECDH", Work in Progress, Internet-Draft, draft-
