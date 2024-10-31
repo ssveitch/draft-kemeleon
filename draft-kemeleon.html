@@ -1108,7 +1108,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="authors">
 <div class="author">
       <div class="author-name">F. Günther</div>
-<div class="org">IBM Research - Zurich</div>
+<div class="org">IBM Research Europe - Zurich</div>
 </div>
 <div class="author">
       <div class="author-name">D. Stebila</div>
@@ -1521,14 +1521,16 @@ The output size of the encoding does not change, but this results in an increase
 <a href="#section-5" class="section-number selfRef">5. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
 <p id="section-5-1">This section contains additional security considerations about the Kemeleon encodings described in this document.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">In general, the obfuscation properties of the Kemeleon encodings depend on module LWE assumptions similar to those underlying the IND-CCA security of ML-KEM; see <span>[<a href="#GSV24" class="cite xref">GSV24</a>]</span> for the detailed security analysis of the original Kemeleon encoding.<a href="#section-5-2" class="pilcrow">¶</a></p>
 <div id="randomness-sampling">
 <section id="section-5.1">
         <h3 id="name-randomness-sampling">
 <a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-randomness-sampling" class="section-name selfRef">Randomness Sampling</a>
         </h3>
 <p id="section-5.1-1">Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
-The randomness (or seed used to generate randomness) must not be derived from a public source.
-In particular, public randomness would enable distinguishing a Kemeleon-encoded value from a random bitstring.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+The randomness (or seed used to generate randomness) used in Kemeleon encodings <span class="bcp14">MUST</span> be kept secret.
+In particular, public randomness allows to easily distinguish a Kemeleon-encoded value from a random bytestring:
+Decoding the value in question, re-encoding it with the public randomness, will yield the original value if it was indeed Kemeleon-encoded.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="timing-side-channels">
@@ -1536,7 +1538,8 @@ In particular, public randomness would enable distinguishing a Kemeleon-encoded 
         <h3 id="name-timing-side-channels">
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-timing-side-channels" class="section-name selfRef">Timing Side-Channels</a>
         </h3>
-<p id="section-5.2-1">(also from resampling)<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-1">Beyond timing side-channel considerations for ML-KEM itself, care should be taking when using Kemeleon encodings, in particular such with a non-zero failure probability.
+Rejecting and re-generating public keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1629,7 +1632,7 @@ In particular, public randomness would enable distinguishing a Kemeleon-encoded 
       </h2>
 <address class="vcard">
         <div dir="auto" class="left"><span class="fn nameRole">Felix Günther</span></div>
-<div dir="auto" class="left"><span class="org">IBM Research - Zurich</span></div>
+<div dir="auto" class="left"><span class="org">IBM Research Europe - Zurich</span></div>
 <div class="email">
 <span>Email:</span>
 <a href="mailto:mail@felixguenther.info" class="email">mail@felixguenther.info</a>

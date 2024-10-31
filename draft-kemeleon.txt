@@ -3,7 +3,7 @@
 
 
 Network Working Group                                         F. Günther
-Internet-Draft                                     IBM Research - Zurich
+Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
 Expires: 4 May 2025                               University of Waterloo
                                                                S. Veitch
@@ -287,17 +287,28 @@ Table of Contents
    This section contains additional security considerations about the
    Kemeleon encodings described in this document.
 
+   In general, the obfuscation properties of the Kemeleon encodings
+   depend on module LWE assumptions similar to those underlying the IND-
+   CCA security of ML-KEM; see [GSV24] for the detailed security
+   analysis of the original Kemeleon encoding.
+
 5.1.  Randomness Sampling
 
    Both public key and ciphertext encodings in the original Kemeleon
    encoding are randomized.  The randomness (or seed used to generate
-   randomness) must not be derived from a public source.  In particular,
-   public randomness would enable distinguishing a Kemeleon-encoded
-   value from a random bitstring.
+   randomness) used in Kemeleon encodings MUST be kept secret.  In
+   particular, public randomness allows to easily distinguish a
+   Kemeleon-encoded value from a random bytestring: Decoding the value
+   in question, re-encoding it with the public randomness, will yield
+   the original value if it was indeed Kemeleon-encoded.
 
 5.2.  Timing Side-Channels
 
-   (also from resampling)
+   Beyond timing side-channel considerations for ML-KEM itself, care
+   should be taking when using Kemeleon encodings, in particular such
+   with a non-zero failure probability.  Rejecting and re-generating
+   public keys or ciphertexts may leak information about the use of
+   Kemeleon encodings, as might the overhead of the encoding itself.
 
 6.  IANA Considerations
 
@@ -364,7 +375,7 @@ Appendix A.  Acknowledgments
 Authors' Addresses
 
    Felix Günther
-   IBM Research - Zurich
+   IBM Research Europe - Zurich
    Email: mail@felixguenther.info
 
 
