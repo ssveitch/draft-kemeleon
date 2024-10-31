@@ -211,7 +211,7 @@ The output size of the encoding does not change, but this results in an increase
 In particular, success probabilities are as follows, for public key and ciphertext encodings:
 | Parameter     | Pk success probability | Ctxt success probability |
 | :------------ | ---------------------: |  ----------------------: |
-| ML-KEM-512    |                  0.49  |                          | 
+| ML-KEM-512    |                  0.49  |                          |
 | ML-KEM-768    |                  0.29  |                          |
 | ML-KEM-1024   |                  0.53  |                          |
 
