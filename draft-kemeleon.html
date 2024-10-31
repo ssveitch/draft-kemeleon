@@ -1289,32 +1289,40 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <p id="section-3-1">A KEM consists of three algorithms:<a href="#section-3-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3-2.1">
-          <p id="section-3-2.1.1">'KeyGen() -&gt; (pk, sk)': A probabilistic key generation algorithm that, with no input, generates a public key 'pk' and a secret key 'sk'.<a href="#section-3-2.1.1" class="pilcrow">¶</a></p>
+          <p id="section-3-2.1.1"><code>KeyGen() -&gt; (pk, sk)</code>: A probabilistic key generation algorithm that, with no input, generates a public key <code>pk</code> and a secret key <code>sk</code>.<a href="#section-3-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-2.2">
-          <p id="section-3-2.2.1">'Encaps(pk) -&gt; (c, K)': A probabilistic encapsulation algorithm that takes as input a public key 'pk', and outputs a ciphertext 'ct' and shared secret key 'K'.<a href="#section-3-2.2.1" class="pilcrow">¶</a></p>
+          <p id="section-3-2.2.1"><code>Encaps(pk) -&gt; (c, K)</code>: A probabilistic encapsulation algorithm that takes as input a public key <code>pk</code>, and outputs a ciphertext <code>ct</code> and shared secret key <code>K</code>.<a href="#section-3-2.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-2.3">
-          <p id="section-3-2.3.1">'Decaps(sk, c) -&gt; K': A decapsulation algorithm that takes as input a secret key 'sk' and ciphertext 'c', and outputs a shared secret key 'K'.<a href="#section-3-2.3.1" class="pilcrow">¶</a></p>
+          <p id="section-3-2.3.1"><code>Decaps(sk, c) -&gt; K</code>: A decapsulation algorithm that takes as input a secret key <code>sk</code> and ciphertext <code>c</code>, and outputs a shared secret key <code>K</code>.<a href="#section-3-2.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-3-3">The following variables and functions are adopted from <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>:
-- <code>q = 3329</code>
-- <code>Compress_d : x -&gt; round((2d/q)*x) mod 2d</code> (Equation 4.7)
-- <code>Decompress_d : y -&gt; round((q/2d)*y)</code> (Equation 4.8)<a href="#section-3-3" class="pilcrow">¶</a></p>
-<p id="section-3-4"><code>ML-KEM.KeyGen()</code> (Section 7.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces a public key, <code>pk</code>, (termed an encapsulation key in <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) and a private key, <code>sk</code>, (decapsulation key).
-Public keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix <code>A</code>.
-<code>ML-KEM.Encaps(pk)</code> (Section 7.2 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces ciphertexts consisting of byte-encoded compressed vectors of cofficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).<a href="#section-3-4" class="pilcrow">¶</a></p>
-<p id="section-3-5">The following terms and notation are used throughout this document:<a href="#section-3-5" class="pilcrow">¶</a></p>
+<p id="section-3-3">The following variables and functions are adopted from <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>:<a href="#section-3-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3-6.1">
-          <p id="section-3-6.1.1"><code>msb(x)</code> refers to the most significant bit of the value x<a href="#section-3-6.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-3-4.1">
+          <p id="section-3-4.1.1"><code>q = 3329</code><a href="#section-3-4.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-3-6.2">
-          <p id="section-3-6.2.1"><code>a[i]</code> denotes the <code>i</code>th position of a vector <code>a</code> of coefficients<a href="#section-3-6.2.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-3-4.2">
+          <p id="section-3-4.2.1"><code>Compress_d : x -&gt; round((2d/q)*x) mod 2d</code> (Equation 4.7)<a href="#section-3-4.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-3-6.3">
-          <p id="section-3-6.3.1"><code>concat(x0, ..., xN)</code>: returns the concatenation of bytestrings.<a href="#section-3-6.3.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-3-4.3">
+          <p id="section-3-4.3.1"><code>Decompress_d : y -&gt; round((q/2d)*y)</code> (Equation 4.8)<a href="#section-3-4.3.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+<p id="section-3-5"><code>ML-KEM.KeyGen()</code> (Section 7.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces a public key, <code>pk</code>, (termed an encapsulation key in <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) and a private key, <code>sk</code>, (decapsulation key).
+Public keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix <code>A</code>.
+<code>ML-KEM.Encaps(pk)</code> (Section 7.2 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces ciphertexts consisting of byte-encoded compressed vectors of cofficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).<a href="#section-3-5" class="pilcrow">¶</a></p>
+<p id="section-3-6">The following terms and notation are used throughout this document:<a href="#section-3-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3-7.1">
+          <p id="section-3-7.1.1"><code>msb(x)</code> refers to the most significant bit of the value x<a href="#section-3-7.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-7.2">
+          <p id="section-3-7.2.1"><code>a[i]</code> denotes the <code>i</code>th position of a vector <code>a</code> of coefficients<a href="#section-3-7.2.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-7.3">
+          <p id="section-3-7.3.1"><code>concat(x0, ..., xN)</code>: returns the concatenation of bytestrings.<a href="#section-3-7.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
@@ -1443,12 +1451,34 @@ First, the encoding rejects any polynomial with a coefficient equal to <code>q-1
 This ensures that all arithmetic can be computed with values modulo <code>q-1 = 13*2^8</code>.
 Then, note that rather than accumulating values to a large integer mod <code>q^(k*n)</code>, it is only required to accumulate values to an integer mod <code>13^(k*n)</code>, while keeping track of the 8 lower order bits of each coefficient.
 The output size of the encoding does not change, but this results in an increased rejection rate.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
-<p id="section-4.5-2">In particular, success probabilities are as follows, for public key and ciphertext encodings:
-| Parameter     | Pk success probability | Ctxt success probability |
-| :------------ | ---------------------: |  ----------------------: |
-| ML-KEM-512    |                  0.49  |                          |
-| ML-KEM-768    |                  0.29  |                          |
-| ML-KEM-1024   |                  0.53  |                          |<a href="#section-4.5-2" class="pilcrow">¶</a></p>
+<p id="section-4.5-2">In particular, success probabilities are as follows, for public key and ciphertext encodings:<a href="#section-4.5-2" class="pilcrow">¶</a></p>
+<table class="center" id="table-1">
+          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Parameter</th>
+              <th class="text-right" rowspan="1" colspan="1">Pk success probability</th>
+              <th class="text-right" rowspan="1" colspan="1">Ctxt success probability</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">ML-KEM-512</td>
+              <td class="text-right" rowspan="1" colspan="1">0.49</td>
+              <td class="text-right" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">ML-KEM-768</td>
+              <td class="text-right" rowspan="1" colspan="1">0.29</td>
+              <td class="text-right" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">ML-KEM-1024</td>
+              <td class="text-right" rowspan="1" colspan="1">0.53</td>
+              <td class="text-right" rowspan="1" colspan="1"> </td>
+            </tr>
+          </tbody>
+        </table>
 </section>
 </div>
 <div id="summary-of-encodings">
@@ -1456,8 +1486,8 @@ The output size of the encoding does not change, but this results in an increase
         <h3 id="name-summary-of-encodings">
 <a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-summary-of-encodings" class="section-name selfRef">Summary of Encodings</a>
         </h3>
-<table class="center" id="table-1">
-          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+<table class="center" id="table-2">
+          <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
 <thead>
             <tr>
               <th class="text-left" rowspan="1" colspan="1">Algorithm</th>

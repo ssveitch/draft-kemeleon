@@ -125,21 +125,25 @@ Table of Contents
 
    A KEM consists of three algorithms:
 
-   *  'KeyGen() -> (pk, sk)': A probabilistic key generation algorithm
-      that, with no input, generates a public key 'pk' and a secret key
-      'sk'.
+   *  KeyGen() -> (pk, sk): A probabilistic key generation algorithm
+      that, with no input, generates a public key pk and a secret key
+      sk.
 
-   *  'Encaps(pk) -> (c, K)': A probabilistic encapsulation algorithm
-      that takes as input a public key 'pk', and outputs a ciphertext
-      'ct' and shared secret key 'K'.
+   *  Encaps(pk) -> (c, K): A probabilistic encapsulation algorithm that
+      takes as input a public key pk, and outputs a ciphertext ct and
+      shared secret key K.
 
-   *  'Decaps(sk, c) -> K': A decapsulation algorithm that takes as
-      input a secret key 'sk' and ciphertext 'c', and outputs a shared
-      secret key 'K'.
+   *  Decaps(sk, c) -> K: A decapsulation algorithm that takes as input
+      a secret key sk and ciphertext c, and outputs a shared secret key
+      K.
 
-   The following variables and functions are adopted from [FIPS203]: - q
-   = 3329 - Compress_d : x -> round((2d/q)*x) mod 2d (Equation 4.7) -
-   Decompress_d : y -> round((q/2d)*y) (Equation 4.8)
+   The following variables and functions are adopted from [FIPS203]:
+
+   *  q = 3329
+
+   *  Compress_d : x -> round((2d/q)*x) mod 2d (Equation 4.7)
+
+   *  Decompress_d : y -> round((q/2d)*y) (Equation 4.8)
 
    ML-KEM.KeyGen() (Section 7.1 [FIPS203]) produces a public key, pk,
    (termed an encapsulation key in [FIPS203]) and a private key, sk,
@@ -252,10 +256,19 @@ Table of Contents
    this results in an increased rejection rate.
 
    In particular, success probabilities are as follows, for public key
-   and ciphertext encodings: | Parameter | Pk success probability | Ctxt
-   success probability | | :------------ | ---------------------: |
-   ----------------------: | | ML-KEM-512 | 0.49 | | | ML-KEM-768 |
-   0.29 | | | ML-KEM-1024 | 0.53 | |
+   and ciphertext encodings:
+
+    +=============+========================+==========================+
+    | Parameter   | Pk success probability | Ctxt success probability |
+    +=============+========================+==========================+
+    | ML-KEM-512  |                   0.49 |                          |
+    +-------------+------------------------+--------------------------+
+    | ML-KEM-768  |                   0.29 |                          |
+    +-------------+------------------------+--------------------------+
+    | ML-KEM-1024 |                   0.53 |                          |
+    +-------------+------------------------+--------------------------+
+
+                                  Table 1
 
 4.6.  Summary of Encodings
 
@@ -267,7 +280,7 @@ Table of Contents
     +-----------+---------------------+-------------+----------------+
     +-----------+---------------------+-------------+----------------+
 
-                                 Table 1
+                                 Table 2
 
 5.  Security Considerations
 
