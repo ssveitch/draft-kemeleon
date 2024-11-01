@@ -107,9 +107,10 @@ A KEM consists of three algorithms:
 
 The following variables and functions are adopted from {{FIPS203}}:
 
-- `q = 3329`
+- `q = 3329`, `n = 256`
 - `Compress_d : x -> round((2d/q)*x) mod 2d` (Equation 4.7)
 - `Decompress_d : y -> round((q/2d)*y)` (Equation 4.8)
+- remaining parameters `k`, `d_u`, `d_v`, etc. are defined by the respective ML-KEM parameter set
 
 `ML-KEM.KeyGen()` (Section 7.1 {{FIPS203}}) produces a public key, `pk`, (termed an encapsulation key in {{FIPS203}}) and a private key, `sk`, (decapsulation key).
 Public keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix `A`.
@@ -215,7 +216,13 @@ Kemeleon.DecodeCtxt(ec):
 
 ## Non-Rejection Sampling Variant
 
-Applying a technique from {{ELL2}}, the original `Kemeleon` construction can be adapted to avoid rejection sampling.
+Applying a technique from {{ELL2}} (Section 3.4), the original `Kemeleon` construction can be adapted to avoid rejection sampling.
+This results in slightly larger output sizes, but the encoding algorithm never fails.
+For this variant, where `r` is the encoded vector before rejection occurs in `VectorEncode`, we then choose `m` at random from `[floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = log_2(q^(k*n))` and `t = 128`, and return `r + m*q^(k*n)`.
+One MAY select `t` to be a desired security parameter.
+This variant results in encoded values whose statistical distance from uniform is at most `2^t`.
+For all inputs (public keys or ciphertexts), this results in an increased output size of `t` bits, where `t` is the security parameter.
+For example, with `t=128`, this increases the output size by 16 bytes.
 
 ## Faster Arithmetic Variant
 
@@ -225,23 +232,31 @@ This ensures that all arithmetic can be computed with values modulo `q-1 = 13*2^
 Then, note that rather than accumulating values to a large integer mod `q^(k*n)`, it is only required to accumulate values to an integer mod `13^(k*n)`, while keeping track of the 8 lower order bits of each coefficient.
 The output size of the encoding does not change, but this results in an increased rejection rate.
 
-In particular, success probabilities are as follows, for public key and ciphertext encodings:
+In particular, {{fast-succ-prob}} gives success probabilities for public key and ciphertext encodings:
 
 | Parameter     | Pk success probability | Ctxt success probability |
 | :------------ | ---------------------: |  ----------------------: |
 | ML-KEM-512    |                  0.49  |                     0.45 |
 | ML-KEM-768    |                  0.29  |                     0.25 |
 | ML-KEM-1024   |                  0.53  |                     0.47 |
-
-## Deterministic Encoding
-
+{: #fast-succ-prob title="Success probabilities for faster Kemeleon encoding"}
 
 ## Summary of Encodings
 
-| Algorithm       | Output size (bytes) | Success probability | Additional considerations |
-| :-------------- | ------------------: | ------------------: | ------------------------: |
-| Kemeleon        |                     |                     |                           |
-|                 |                     |                     |                           |
+| Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations |
+| :----------------------- | -------------------: | -------------------: | ------------------------: |
+| Kemeleon - ML-KEM512     | pk: 781, ctxt: 877   | pk: 0.56, ctxt: 0.51 | Large int (750B) arithmetic |
+| Kemeleon - ML-KEM768     | pk: 1156, ctxt: 1252 | pk: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
+| Kemeleon - ML-KEM1024    | pk: 1530, ctxt: 1658 | pk: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
+| :----------------------- | -------------------: | -------------------: | ------------------------: |
+| KemeleonNR - ML-KEM512   | pk: 797, ctxt: 893   | pk: 1.00, ctxt: 1.00 |                           |
+| KemeleonNR - ML-KEM768   | pk: 1172, ctxt: 1268 | pk: 1.00, ctxt: 1.00 |                           |
+| KemeleonNR - ML-KEM1024  | pk: 1546, ctxt: 1674 | pk: 1.00, ctxt: 1.00 |                           |
+| :----------------------- | -------------------: | -------------------: | ------------------------: |
+| KemeleonFT - ML-KEM512   | pk: 781, ctxt: 877   | pk: 0.49, ctxt: 0.45 | Smaller int (235B) arithmetic |
+| KemeleonFT - ML-KEM768   | pk: 1156, ctxt: 1252 | pk: 0.29, ctxt: 0.25 | Smaller int (355B) arithmetic |
+| KemeleonFT - ML-KEM1024  | pk: 1530, ctxt: 1658 | pk: 0.53, ctxt: 0.47 | Smaller int (475B) arithmetic |
+{: #summary-encoding title="Summary of Kemeleon Variants, NR = No Reject, FT = Faster"}
 
 
 # Security Considerations
