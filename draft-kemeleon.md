@@ -155,6 +155,7 @@ VectorDecode(r):
 The following algorithm samples an uncompressed pre-image of a coefficient c at random.
 The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}).
 
+TODO:
 ~~~
 RecoverFrom_d(u,c):
    if d == 10:
@@ -268,13 +269,12 @@ In general, the obfuscation properties of the Kemeleon encodings depend on modul
 ## Randomness Sampling
 Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
 The randomness (or seed used to generate randomness) used in Kemeleon encodings MUST be kept secret.
-In particular, public randomness allows to easily distinguish a Kemeleon-encoded value from a random bytestring:
-Decoding the value in question and re-encoding it with the public randomness, will yield the original value if that was indeed Kemeleon-encoded.
+In particular, public randomness enables distinguishing a Kemeleon-encoded value from a random bytestring:
+Decoding the value in question and re-encoding it with the public randomness will yield the original value if it was Kemeleon-encoded.
 
 ## Timing Side-Channels
-Beyond timing side-channel considerations for ML-KEM itself, care should be taking when using Kemeleon encodings, in particular such with a non-zero failure probability.
+Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings, in particular those with a non-zero failure probability.
 Rejecting and re-generating public keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.
-
 
 # IANA Considerations
 
