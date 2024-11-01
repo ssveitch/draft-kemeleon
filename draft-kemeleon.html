@@ -1378,8 +1378,8 @@ VectorDecode(r):
 </div>
 <p id="section-4.1-3">The following algorithm samples an uncompressed pre-image of a coefficient c at random.
 The mapping is based on the <code>Compress_d</code>, <code>Decompress_d</code> algorithms from (Section 4.2.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>).<a href="#section-4.1-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-4">
-<pre>
+<p id="section-4.1-4">TODO:
+~~~
 RecoverFrom_d(u,c):
    if d == 10:
       if Compress_d(u - 2) == c:
@@ -1387,12 +1387,10 @@ RecoverFrom_d(u,c):
       else:
          rand &lt;--$ [-1,0,1]
       return u + rand
-   if d == 11:
-
-   else:
+   if d == 11:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.1-5">else:
       return err
-</pre><a href="#section-4.1-4" class="pilcrow">¶</a>
-</div>
+~~~<a href="#section-4.1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="encoding-public-keys">
@@ -1607,8 +1605,8 @@ The output size of the encoding does not change, but this results in an increase
         </h3>
 <p id="section-5.1-1">Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
 The randomness (or seed used to generate randomness) used in Kemeleon encodings <span class="bcp14">MUST</span> be kept secret.
-In particular, public randomness allows to easily distinguish a Kemeleon-encoded value from a random bytestring:
-Decoding the value in question and re-encoding it with the public randomness, will yield the original value if that was indeed Kemeleon-encoded.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+In particular, public randomness enables distinguishing a Kemeleon-encoded value from a random bytestring:
+Decoding the value in question and re-encoding it with the public randomness will yield the original value if it was Kemeleon-encoded.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="timing-side-channels">
@@ -1616,7 +1614,7 @@ Decoding the value in question and re-encoding it with the public randomness, wi
         <h3 id="name-timing-side-channels">
 <a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-timing-side-channels" class="section-name selfRef">Timing Side-Channels</a>
         </h3>
-<p id="section-5.2-1">Beyond timing side-channel considerations for ML-KEM itself, care should be taking when using Kemeleon encodings, in particular such with a non-zero failure probability.
+<p id="section-5.2-1">Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings, in particular those with a non-zero failure probability.
 Rejecting and re-generating public keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
