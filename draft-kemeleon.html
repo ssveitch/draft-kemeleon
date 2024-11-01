@@ -1081,11 +1081,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Kemeleon</td>
-<td class="right">October 2024</td>
+<td class="right">November 2024</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Günther, et al.</td>
-<td class="center">Expires 4 May 2025</td>
+<td class="center">Expires 5 May 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1098,12 +1098,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-kemeleon-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-10-31" class="published">31 October 2024</time>
+<time datetime="2024-11-01" class="published">1 November 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-05-04">4 May 2025</time></dd>
+<dd class="expires"><time datetime="2025-05-05">5 May 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1158,7 +1158,7 @@ This document specifies a number of variants of these encodings, with differing 
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 4 May 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 5 May 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1215,7 +1215,10 @@ This document specifies a number of variants of these encodings, with differing 
                 <p id="section-toc.1-1.4.2.5.1"><a href="#section-4.5" class="auto internal xref">4.5</a>.  <a href="#name-faster-arithmetic-variant" class="internal xref">Faster Arithmetic Variant</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.6">
-                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-summary-of-encodings" class="internal xref">Summary of Encodings</a></p>
+                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-deterministic-encoding" class="internal xref">Deterministic Encoding</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.7">
+                <p id="section-toc.1-1.4.2.7.1"><a href="#section-4.7" class="auto internal xref">4.7</a>.  <a href="#name-summary-of-encodings" class="internal xref">Summary of Encodings</a></p>
 </li>
             </ul>
 </li>
@@ -1399,7 +1402,7 @@ RecoverFrom_d(u,c):
         </h3>
 <div class="alignLeft art-text artwork" id="section-4.2-1">
 <pre>
-Kemeleon1.EncodePk(pk = (t, rho)):
+Kemeleon.EncodePk(pk = (t, rho)):
    r = VectorEncode(t)
    if r == err:
       return err
@@ -1409,7 +1412,7 @@ Kemeleon1.EncodePk(pk = (t, rho)):
 </div>
 <div class="alignLeft art-text artwork" id="section-4.2-2">
 <pre>
-Kemeleon1.DecodePk(epk):
+Kemeleon.DecodePk(epk):
    r,rho = epk // rho is fixed length
    t = VectorDecode(r)
    return (t, rho)
@@ -1422,14 +1425,31 @@ Kemeleon1.DecodePk(epk):
         <h3 id="name-encoding-ciphertexts">
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-encoding-ciphertexts" class="section-name selfRef">Encoding Ciphertexts</a>
         </h3>
-<p id="section-4.3-1">TODO: complete<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.3-1">The following algorithms use global parameters <code>d_u</code>, <code>d_v</code> defined by the respective ML-KEM parameter set.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3-2">
 <pre>
-Kemeleon1.EncodeCtxt(c = (c_1,c_2)):
-   u = Decompress_d(c_1,d_u)
+Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+   d = d_u
+   u = Decompress_d(c_1,d)
    for i from 1 to k*n:
-      x = RecoverFrom_d(u[i],c[i])
+      u[i] = RecoverFrom_d(u[i],c_1[i])
+   r = VectorEncode(u)
+   if r == err:
+      return err
+   for i from 1 to n:
+      if c_2[1] == 0:
+         return err with prob. 1/ceil(q/(2^d_v))
+   return concat(r,c_2)
 </pre><a href="#section-4.3-2" class="pilcrow">¶</a>
+</div>
+<div class="alignLeft art-text artwork" id="section-4.3-3">
+<pre>
+Kemeleon.DecodeCtxt(ec):
+   r,c_2 = ec // c_2 is fixed length
+   u = VectorDecode(r)
+   c_1 = Compress_q(u,d_u)
+   return (c_1,c_2)
+</pre><a href="#section-4.3-3" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1465,26 +1485,33 @@ The output size of the encoding does not change, but this results in an increase
             <tr>
               <td class="text-left" rowspan="1" colspan="1">ML-KEM-512</td>
               <td class="text-right" rowspan="1" colspan="1">0.49</td>
-              <td class="text-right" rowspan="1" colspan="1"> </td>
+              <td class="text-right" rowspan="1" colspan="1">0.45</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">ML-KEM-768</td>
               <td class="text-right" rowspan="1" colspan="1">0.29</td>
-              <td class="text-right" rowspan="1" colspan="1"> </td>
+              <td class="text-right" rowspan="1" colspan="1">0.25</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">ML-KEM-1024</td>
               <td class="text-right" rowspan="1" colspan="1">0.53</td>
-              <td class="text-right" rowspan="1" colspan="1"> </td>
+              <td class="text-right" rowspan="1" colspan="1">0.47</td>
             </tr>
           </tbody>
         </table>
 </section>
 </div>
-<div id="summary-of-encodings">
+<div id="deterministic-encoding">
 <section id="section-4.6">
+        <h3 id="name-deterministic-encoding">
+<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-deterministic-encoding" class="section-name selfRef">Deterministic Encoding</a>
+      </h3>
+</section>
+</div>
+<div id="summary-of-encodings">
+<section id="section-4.7">
         <h3 id="name-summary-of-encodings">
-<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-summary-of-encodings" class="section-name selfRef">Summary of Encodings</a>
+<a href="#section-4.7" class="section-number selfRef">4.7. </a><a href="#name-summary-of-encodings" class="section-name selfRef">Summary of Encodings</a>
         </h3>
 <table class="center" id="table-2">
           <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
@@ -1571,6 +1598,10 @@ Rejecting and re-generating public keys or ciphertexts may leak information abou
         <dd>
 <span class="refTitle">"Module-Lattice-Based Key-Encapsulation Mechanism Standard"</span>, <span class="refContent">National Institute of Standards and Technology</span>, <span class="seriesInfo">DOI 10.6028/nist.fips.203</span>, <time datetime="2024-08" class="refDate">August 2024</time>, <span>&lt;<a href="https://doi.org/10.6028/nist.fips.203">https://doi.org/10.6028/nist.fips.203</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="GSV24">[GSV24]</dt>
+        <dd>
+<span class="refAuthor">Günther, F.</span>, <span class="refAuthor">Stebila, D.</span>, and <span class="refAuthor">S. Veitch</span>, <span class="refTitle">"Obfuscated Key Exchange"</span>, <time datetime="2024" class="refDate">2024</time>, <span>&lt;<a href="https://eprint.iacr.org/2024/1086">https://eprint.iacr.org/2024/1086</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC2119">[RFC2119]</dt>
         <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
@@ -1599,10 +1630,6 @@ Rejecting and re-generating public keys or ciphertexts may leak information abou
 <dt id="ECDH-PSI">[ECDH-PSI]</dt>
         <dd>
 <span class="refAuthor">wangyuchen</span>, <span class="refAuthor">Chang</span>, <span class="refAuthor">Lu, Y.</span>, <span class="refAuthor">Hong, C.</span>, and <span class="refAuthor">J. Peng</span>, <span class="refTitle">"PSI based on ECDH"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ecdh-psi-00</span>, <time datetime="2024-10-21" class="refDate">21 October 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00">https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00</a>&gt;</span>. </dd>
-<dd class="break"></dd>
-<dt id="GSV24">[GSV24]</dt>
-        <dd>
-<span class="refAuthor">Günther, F.</span>, <span class="refAuthor">Stebila, D.</span>, and <span class="refAuthor">S. Veitch</span>, <span class="refTitle">"Obfuscated Key Exchange"</span>, <time datetime="2024" class="refDate">2024</time>, <span>&lt;<a href="https://eprint.iacr.org/2024/1086">https://eprint.iacr.org/2024/1086</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="OBFS4">[OBFS4]</dt>
         <dd>

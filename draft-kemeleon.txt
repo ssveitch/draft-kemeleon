@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 4 May 2025                               University of Waterloo
+Expires: 5 May 2025                               University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                         31 October 2024
+                                                         1 November 2024
 
 
                            Kemeleon Encodings
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 May 2025.
+   This Internet-Draft will expire on 5 May 2025.
 
 Copyright Notice
 
@@ -77,7 +77,8 @@ Table of Contents
      4.3.  Encoding Ciphertexts
      4.4.  Non-Rejection Sampling Variant
      4.5.  Faster Arithmetic Variant
-     4.6.  Summary of Encodings
+     4.6.  Deterministic Encoding
+     4.7.  Summary of Encodings
    5.  Security Considerations
      5.1.  Randomness Sampling
      5.2.  Timing Side-Channels
@@ -217,26 +218,41 @@ Table of Contents
 
 4.2.  Encoding Public Keys
 
-   Kemeleon1.EncodePk(pk = (t, rho)):
+   Kemeleon.EncodePk(pk = (t, rho)):
       r = VectorEncode(t)
       if r == err:
          return err
       else:
          return concat(r,rho)
 
-   Kemeleon1.DecodePk(epk):
+   Kemeleon.DecodePk(epk):
       r,rho = epk // rho is fixed length
       t = VectorDecode(r)
       return (t, rho)
 
 4.3.  Encoding Ciphertexts
 
-   TODO: complete
+   The following algorithms use global parameters d_u, d_v defined by
+   the respective ML-KEM parameter set.
 
-   Kemeleon1.EncodeCtxt(c = (c_1,c_2)):
-      u = Decompress_d(c_1,d_u)
+   Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+      d = d_u
+      u = Decompress_d(c_1,d)
       for i from 1 to k*n:
-         x = RecoverFrom_d(u[i],c[i])
+         u[i] = RecoverFrom_d(u[i],c_1[i])
+      r = VectorEncode(u)
+      if r == err:
+         return err
+      for i from 1 to n:
+         if c_2[1] == 0:
+            return err with prob. 1/ceil(q/(2^d_v))
+      return concat(r,c_2)
+
+   Kemeleon.DecodeCtxt(ec):
+      r,c_2 = ec // c_2 is fixed length
+      u = VectorDecode(r)
+      c_1 = Compress_q(u,d_u)
+      return (c_1,c_2)
 
 4.4.  Non-Rejection Sampling Variant
 
@@ -261,16 +277,18 @@ Table of Contents
     +=============+========================+==========================+
     | Parameter   | Pk success probability | Ctxt success probability |
     +=============+========================+==========================+
-    | ML-KEM-512  |                   0.49 |                          |
+    | ML-KEM-512  |                   0.49 |                     0.45 |
     +-------------+------------------------+--------------------------+
-    | ML-KEM-768  |                   0.29 |                          |
+    | ML-KEM-768  |                   0.29 |                     0.25 |
     +-------------+------------------------+--------------------------+
-    | ML-KEM-1024 |                   0.53 |                          |
+    | ML-KEM-1024 |                   0.53 |                     0.47 |
     +-------------+------------------------+--------------------------+
 
                                   Table 1
 
-4.6.  Summary of Encodings
+4.6.  Deterministic Encoding
+
+4.7.  Summary of Encodings
 
     +===========+=====================+=============+================+
     | Algorithm | Output size (bytes) |     Success |     Additional |
@@ -327,6 +345,9 @@ Table of Contents
               DOI 10.6028/nist.fips.203, August 2024,
               <https://doi.org/10.6028/nist.fips.203>.
 
+   [GSV24]    Günther, F., Stebila, D., and S. Veitch, "Obfuscated Key
+              Exchange", 2024, <https://eprint.iacr.org/2024/1086>.
+
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
@@ -353,9 +374,6 @@ Table of Contents
               based on ECDH", Work in Progress, Internet-Draft, draft-
               ecdh-psi-00, 21 October 2024,
               <https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00>.
-
-   [GSV24]    Günther, F., Stebila, D., and S. Veitch, "Obfuscated Key
-              Exchange", 2024, <https://eprint.iacr.org/2024/1086>.
 
    [OBFS4]    "obfs4 (The obfourscator)", n.d.,
               <https://gitlab.torproject.org/tpo/anti-censorship/
