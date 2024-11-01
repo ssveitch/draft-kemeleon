@@ -1215,10 +1215,7 @@ This document specifies a number of variants of these encodings, with differing 
                 <p id="section-toc.1-1.4.2.5.1"><a href="#section-4.5" class="auto internal xref">4.5</a>.  <a href="#name-faster-arithmetic-variant" class="internal xref">Faster Arithmetic Variant</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.6">
-                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-deterministic-encoding" class="internal xref">Deterministic Encoding</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.7">
-                <p id="section-toc.1-1.4.2.7.1"><a href="#section-4.7" class="auto internal xref">4.7</a>.  <a href="#name-summary-of-encodings" class="internal xref">Summary of Encodings</a></p>
+                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-summary-of-encodings" class="internal xref">Summary of Encodings</a></p>
 </li>
             </ul>
 </li>
@@ -1304,13 +1301,16 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
 <p id="section-3-3">The following variables and functions are adopted from <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>:<a href="#section-3-3" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3-4.1">
-          <p id="section-3-4.1.1"><code>q = 3329</code><a href="#section-3-4.1.1" class="pilcrow">¶</a></p>
+          <p id="section-3-4.1.1"><code>q = 3329</code>, <code>n = 256</code><a href="#section-3-4.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-4.2">
           <p id="section-3-4.2.1"><code>Compress_d : x -&gt; round((2d/q)*x) mod 2d</code> (Equation 4.7)<a href="#section-3-4.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-4.3">
           <p id="section-3-4.3.1"><code>Decompress_d : y -&gt; round((q/2d)*y)</code> (Equation 4.8)<a href="#section-3-4.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-4.4">
+          <p id="section-3-4.4.1">remaining parameters <code>k</code>, <code>d_u</code>, <code>d_v</code>, etc. are defined by the respective ML-KEM parameter set<a href="#section-3-4.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <p id="section-3-5"><code>ML-KEM.KeyGen()</code> (Section 7.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces a public key, <code>pk</code>, (termed an encapsulation key in <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) and a private key, <code>sk</code>, (decapsulation key).
@@ -1458,7 +1458,13 @@ Kemeleon.DecodeCtxt(ec):
         <h3 id="name-non-rejection-sampling-vari">
 <a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-non-rejection-sampling-vari" class="section-name selfRef">Non-Rejection Sampling Variant</a>
         </h3>
-<p id="section-4.4-1">Applying a technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span>, the original <code>Kemeleon</code> construction can be adapted to avoid rejection sampling.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.4-1">Applying a technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span> (Section 3.4), the original <code>Kemeleon</code> construction can be adapted to avoid rejection sampling.
+This results in slightly larger output sizes, but the encoding algorithm never fails.
+For this variant, where <code>r</code> is the encoded vector before rejection occurs in <code>VectorEncode</code>, we then choose <code>m</code> at random from <code>[floor((2^(b+t)-r)/(q^(k*n)))]</code>, where <code>b = log_2(q^(k*n))</code> and <code>t = 128</code>, and return <code>r + m*q^(k*n)</code>.
+One <span class="bcp14">MAY</span> select <code>t</code> to be a desired security parameter.
+This variant results in encoded values whose statistical distance from uniform is at most <code>2^t</code>.
+For all inputs (public keys or ciphertexts), this results in an increased output size of <code>t</code> bits, where <code>t</code> is the security parameter.
+For example, with <code>t=128</code>, this increases the output size by 16 bytes.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="faster-arithmetic-variant">
@@ -1471,9 +1477,13 @@ First, the encoding rejects any polynomial with a coefficient equal to <code>q-1
 This ensures that all arithmetic can be computed with values modulo <code>q-1 = 13*2^8</code>.
 Then, note that rather than accumulating values to a large integer mod <code>q^(k*n)</code>, it is only required to accumulate values to an integer mod <code>13^(k*n)</code>, while keeping track of the 8 lower order bits of each coefficient.
 The output size of the encoding does not change, but this results in an increased rejection rate.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
-<p id="section-4.5-2">In particular, success probabilities are as follows, for public key and ciphertext encodings:<a href="#section-4.5-2" class="pilcrow">¶</a></p>
+<p id="section-4.5-2">In particular, <a href="#fast-succ-prob" class="auto internal xref">Table 1</a> gives success probabilities for public key and ciphertext encodings:<a href="#section-4.5-2" class="pilcrow">¶</a></p>
+<span id="name-success-probabilities-for-f"></span><div id="fast-succ-prob">
 <table class="center" id="table-1">
-          <caption><a href="#table-1" class="selfRef">Table 1</a></caption>
+          <caption>
+<a href="#table-1" class="selfRef">Table 1</a>:
+<a href="#name-success-probabilities-for-f" class="selfRef">Success probabilities for faster Kemeleon encoding</a>
+          </caption>
 <thead>
             <tr>
               <th class="text-left" rowspan="1" colspan="1">Parameter</th>
@@ -1499,25 +1509,23 @@ The output size of the encoding does not change, but this results in an increase
             </tr>
           </tbody>
         </table>
-</section>
 </div>
-<div id="deterministic-encoding">
-<section id="section-4.6">
-        <h3 id="name-deterministic-encoding">
-<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-deterministic-encoding" class="section-name selfRef">Deterministic Encoding</a>
-      </h3>
 </section>
 </div>
 <div id="summary-of-encodings">
-<section id="section-4.7">
+<section id="section-4.6">
         <h3 id="name-summary-of-encodings">
-<a href="#section-4.7" class="section-number selfRef">4.7. </a><a href="#name-summary-of-encodings" class="section-name selfRef">Summary of Encodings</a>
+<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-summary-of-encodings" class="section-name selfRef">Summary of Encodings</a>
         </h3>
+<span id="name-summary-of-kemeleon-variant"></span><div id="summary-encoding">
 <table class="center" id="table-2">
-          <caption><a href="#table-2" class="selfRef">Table 2</a></caption>
+          <caption>
+<a href="#table-2" class="selfRef">Table 2</a>:
+<a href="#name-summary-of-kemeleon-variant" class="selfRef">Summary of Kemeleon Variants, NR = No Reject, FT = Faster</a>
+          </caption>
 <thead>
             <tr>
-              <th class="text-left" rowspan="1" colspan="1">Algorithm</th>
+              <th class="text-left" rowspan="1" colspan="1">Algorithm / Parameter</th>
               <th class="text-right" rowspan="1" colspan="1">Output size (bytes)</th>
               <th class="text-right" rowspan="1" colspan="1">Success probability</th>
               <th class="text-right" rowspan="1" colspan="1">Additional considerations</th>
@@ -1525,19 +1533,62 @@ The output size of the encoding does not change, but this results in an increase
           </thead>
           <tbody>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1">Kemeleon</td>
-              <td class="text-right" rowspan="1" colspan="1"> </td>
-              <td class="text-right" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1">Kemeleon - ML-KEM512</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 781, ctxt: 877</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 0.56, ctxt: 0.51</td>
+              <td class="text-right" rowspan="1" colspan="1">Large int (750B) arithmetic</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Kemeleon - ML-KEM768</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1156, ctxt: 1252</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 0.83, ctxt: 0.77</td>
+              <td class="text-right" rowspan="1" colspan="1">Large int (1150B) arithmetic</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Kemeleon - ML-KEM1024</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1530, ctxt: 1658</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 0.62, ctxt: 0.57</td>
+              <td class="text-right" rowspan="1" colspan="1">Large int (1500B) arithmetic</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM512</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 797, ctxt: 893</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1.00, ctxt: 1.00</td>
               <td class="text-right" rowspan="1" colspan="1"> </td>
             </tr>
             <tr>
-              <td class="text-left" rowspan="1" colspan="1"> </td>
+              <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM768</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1172, ctxt: 1268</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1.00, ctxt: 1.00</td>
               <td class="text-right" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM1024</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1546, ctxt: 1674</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1.00, ctxt: 1.00</td>
               <td class="text-right" rowspan="1" colspan="1"> </td>
-              <td class="text-right" rowspan="1" colspan="1"> </td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">KemeleonFT - ML-KEM512</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 781, ctxt: 877</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 0.49, ctxt: 0.45</td>
+              <td class="text-right" rowspan="1" colspan="1">Smaller int (235B) arithmetic</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">KemeleonFT - ML-KEM768</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1156, ctxt: 1252</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 0.29, ctxt: 0.25</td>
+              <td class="text-right" rowspan="1" colspan="1">Smaller int (355B) arithmetic</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">KemeleonFT - ML-KEM1024</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1530, ctxt: 1658</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 0.53, ctxt: 0.47</td>
+              <td class="text-right" rowspan="1" colspan="1">Smaller int (475B) arithmetic</td>
             </tr>
           </tbody>
         </table>
+</div>
 </section>
 </div>
 </section>
