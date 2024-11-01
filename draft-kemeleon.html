@@ -1378,19 +1378,27 @@ VectorDecode(r):
 </div>
 <p id="section-4.1-3">The following algorithm samples an uncompressed pre-image of a coefficient c at random.
 The mapping is based on the <code>Compress_d</code>, <code>Decompress_d</code> algorithms from (Section 4.2.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>).<a href="#section-4.1-3" class="pilcrow">¶</a></p>
-<p id="section-4.1-4">TODO:
-~~~
+<div class="alignLeft art-text artwork" id="section-4.1-4">
+<pre>
 RecoverFrom_d(u,c):
    if d == 10:
-      if Compress_d(u - 2) == c:
-         rand &lt;--$ [-2,-1,0,1]
+      if Compress_d(u + 2) == c:
+         rand &lt;--$ [-1,0,1,2]
       else:
          rand &lt;--$ [-1,0,1]
       return u + rand
-   if d == 11:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
-<p id="section-4.1-5">else:
+   if d == 11:
+      if Compress_d(u + 1) == c:
+         rand &lt;--$ [0,1]
+      else if Compress_d(u - 1) == c:
+         rand &lt;--$ [-1,0]
+      else:
+         rand = 0
+      return u + rand
+   else:
       return err
-~~~<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+</pre><a href="#section-4.1-4" class="pilcrow">¶</a>
+</div>
 </section>
 </div>
 <div id="encoding-public-keys">
