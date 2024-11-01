@@ -155,17 +155,22 @@ VectorDecode(r):
 The following algorithm samples an uncompressed pre-image of a coefficient c at random.
 The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}).
 
-TODO:
 ~~~
 RecoverFrom_d(u,c):
    if d == 10:
-      if Compress_d(u - 2) == c:
-         rand <--$ [-2,-1,0,1]
+      if Compress_d(u + 2) == c:
+         rand <--$ [-1,0,1,2]
       else:
          rand <--$ [-1,0,1]
       return u + rand
    if d == 11:
-
+      if Compress_d(u + 1) == c:
+         rand <--$ [0,1]
+      else if Compress_d(u - 1) == c:
+         rand <--$ [-1,0]
+      else:
+         rand = 0
+      return u + rand
    else:
       return err
 ~~~
