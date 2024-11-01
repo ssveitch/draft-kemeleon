@@ -50,13 +50,7 @@ normative:
         ins: M. Tibouchi
         name:  Mehdi Tibouchi
 
-informative:
-
-   OBFS4:
-    title: obfs4 (The obfourscator)
-    target: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/-/blob/HEAD/doc/obfs4-spec.txt
-
-   GSV24:
+  GSV24:
     title: Obfuscated Key Exchange
     target: https://eprint.iacr.org/2024/1086
     date: 2024
@@ -70,6 +64,12 @@ informative:
       -
         ins: S. Veitch
         name: Shannon Veitch
+
+informative:
+
+   OBFS4:
+    title: obfs4 (The obfourscator)
+    target: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/-/blob/HEAD/doc/obfs4-spec.txt
 
 --- abstract
 
@@ -171,7 +171,7 @@ RecoverFrom_d(u,c):
 ## Encoding Public Keys
 
 ~~~
-Kemeleon1.EncodePk(pk = (t, rho)):
+Kemeleon.EncodePk(pk = (t, rho)):
    r = VectorEncode(t)
    if r == err:
       return err
@@ -180,7 +180,7 @@ Kemeleon1.EncodePk(pk = (t, rho)):
 ~~~
 
 ~~~
-Kemeleon1.DecodePk(epk):
+Kemeleon.DecodePk(epk):
    r,rho = epk // rho is fixed length
    t = VectorDecode(r)
    return (t, rho)
@@ -188,13 +188,29 @@ Kemeleon1.DecodePk(epk):
 
 ## Encoding Ciphertexts
 
-TODO: complete
+The following algorithms use global parameters `d_u`, `d_v` defined by the respective ML-KEM parameter set.
 
 ~~~
-Kemeleon1.EncodeCtxt(c = (c_1,c_2)):
-   u = Decompress_d(c_1,d_u)
+Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+   d = d_u
+   u = Decompress_d(c_1,d)
    for i from 1 to k*n:
-      x = RecoverFrom_d(u[i],c[i])
+      u[i] = RecoverFrom_d(u[i],c_1[i])
+   r = VectorEncode(u)
+   if r == err:
+      return err
+   for i from 1 to n:
+      if c_2[1] == 0:
+         return err with prob. 1/ceil(q/(2^d_v))
+   return concat(r,c_2)
+~~~
+
+~~~
+Kemeleon.DecodeCtxt(ec):
+   r,c_2 = ec // c_2 is fixed length
+   u = VectorDecode(r)
+   c_1 = Compress_q(u,d_u)
+   return (c_1,c_2)
 ~~~
 
 ## Non-Rejection Sampling Variant
@@ -213,9 +229,11 @@ In particular, success probabilities are as follows, for public key and cipherte
 
 | Parameter     | Pk success probability | Ctxt success probability |
 | :------------ | ---------------------: |  ----------------------: |
-| ML-KEM-512    |                  0.49  |                          |
-| ML-KEM-768    |                  0.29  |                          |
-| ML-KEM-1024   |                  0.53  |                          |
+| ML-KEM-512    |                  0.49  |                     0.45 |
+| ML-KEM-768    |                  0.29  |                     0.25 |
+| ML-KEM-1024   |                  0.53  |                     0.47 |
+
+## Deterministic Encoding
 
 
 ## Summary of Encodings
