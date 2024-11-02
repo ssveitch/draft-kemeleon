@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 5 May 2025                               University of Waterloo
+Expires: 6 May 2025                               University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                         1 November 2024
+                                                         2 November 2024
 
 
                            Kemeleon Encodings
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 May 2025.
+   This Internet-Draft will expire on 6 May 2025.
 
 Copyright Notice
 
@@ -206,7 +206,7 @@ Table of Contents
    coefficient c at random.  The mapping is based on the Compress_d,
    Decompress_d algorithms from (Section 4.2.1 [FIPS203]).
 
-   RecoverFrom_d(u,c):
+   SamplePreimage_d(u,c):
       if d == 10:
          if Compress_d(u + 2) == c:
             rand <--$ [-1,0,1,2]
@@ -247,7 +247,7 @@ Table of Contents
       d = d_u
       u = Decompress_d(c_1,d)
       for i from 1 to k*n:
-         u[i] = RecoverFrom_d(u[i],c_1[i])
+         u[i] = SamplePreimage_d(u[i],c_1[i])
       r = VectorEncode(u)
       if r == err:
          return err
@@ -269,13 +269,13 @@ Table of Contents
    results in slightly larger output sizes, but the encoding algorithm
    never fails.  For this variant, where r is the encoded vector before
    rejection occurs in VectorEncode, we then choose m at random from
-   [floor((2^(b+t)-r)/(q^(k*n)))], where b = log_2(q^(k*n)) and t = 128,
-   and return r + m*q^(k*n).  One MAY select t to be a desired security
-   parameter.  This variant results in encoded values whose statistical
-   distance from uniform is at most 2^t.  For all inputs (public keys or
-   ciphertexts), this results in an increased output size of t bits,
-   where t is the security parameter.  For example, with t=128, this
-   increases the output size by 16 bytes.
+   [0,floor((2^(b+t)-r)/(q^(k*n)))], where b = log_2(q^(k*n)) and t =
+   128, and return r + m*q^(k*n).  One MAY select t to be a desired
+   security parameter.  This variant results in encoded values whose
+   statistical distance from uniform is at most 2^-t.  For all inputs
+   (public keys or ciphertexts), this results in an increased output
+   size of t bits, where t is the security parameter.  For example, with
+   t=128, this increases the output size by 16 bytes.
 
 4.5.  Faster Arithmetic Variant
 
@@ -319,14 +319,14 @@ Table of Contents
      | Kemeleon -   |   pk: 1530, |   pk: 0.62, | Large int (1500B) |
      | ML-KEM1024   |  ctxt: 1658 |  ctxt: 0.57 |        arithmetic |
      +--------------+-------------+-------------+-------------------+
-     | KemeleonNR - |    pk: 797, |   pk: 1.00, |                   |
-     | ML-KEM512    |   ctxt: 893 |  ctxt: 1.00 |                   |
+     | KemeleonNR - |    pk: 797, |   pk: 1.00, |  Large int (775B) |
+     | ML-KEM512    |   ctxt: 893 |  ctxt: 1.00 |        arithmetic |
      +--------------+-------------+-------------+-------------------+
-     | KemeleonNR - |   pk: 1172, |   pk: 1.00, |                   |
-     | ML-KEM768    |  ctxt: 1268 |  ctxt: 1.00 |                   |
+     | KemeleonNR - |   pk: 1172, |   pk: 1.00, | Large int (1175B) |
+     | ML-KEM768    |  ctxt: 1268 |  ctxt: 1.00 |        arithmetic |
      +--------------+-------------+-------------+-------------------+
-     | KemeleonNR - |   pk: 1546, |   pk: 1.00, |                   |
-     | ML-KEM1024   |  ctxt: 1674 |  ctxt: 1.00 |                   |
+     | KemeleonNR - |   pk: 1546, |   pk: 1.00, | Large int (1515B) |
+     | ML-KEM1024   |  ctxt: 1674 |  ctxt: 1.00 |        arithmetic |
      +--------------+-------------+-------------+-------------------+
      | KemeleonFT - |    pk: 781, |   pk: 0.49, |       Smaller int |
      | ML-KEM512    |   ctxt: 877 |  ctxt: 0.45 | (235B) arithmetic |
