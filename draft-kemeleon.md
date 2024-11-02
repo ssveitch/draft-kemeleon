@@ -156,7 +156,7 @@ The following algorithm samples an uncompressed pre-image of a coefficient c at 
 The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}).
 
 ~~~
-RecoverFrom_d(u,c):
+SamplePreimage_d(u,c):
    if d == 10:
       if Compress_d(u + 2) == c:
          rand <--$ [-1,0,1,2]
@@ -202,7 +202,7 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    d = d_u
    u = Decompress_d(c_1,d)
    for i from 1 to k*n:
-      u[i] = RecoverFrom_d(u[i],c_1[i])
+      u[i] = SamplePreimage_d(u[i],c_1[i])
    r = VectorEncode(u)
    if r == err:
       return err
@@ -224,9 +224,9 @@ Kemeleon.DecodeCtxt(ec):
 
 Applying a technique from {{ELL2}} (Section 3.4), the original `Kemeleon` construction can be adapted to avoid rejection sampling.
 This results in slightly larger output sizes, but the encoding algorithm never fails.
-For this variant, where `r` is the encoded vector before rejection occurs in `VectorEncode`, we then choose `m` at random from `[floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = log_2(q^(k*n))` and `t = 128`, and return `r + m*q^(k*n)`.
+For this variant, where `r` is the encoded vector before rejection occurs in `VectorEncode`, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = log_2(q^(k*n))` and `t = 128`, and return `r + m*q^(k*n)`.
 One MAY select `t` to be a desired security parameter.
-This variant results in encoded values whose statistical distance from uniform is at most `2^t`.
+This variant results in encoded values whose statistical distance from uniform is at most `2^-t`.
 For all inputs (public keys or ciphertexts), this results in an increased output size of `t` bits, where `t` is the security parameter.
 For example, with `t=128`, this increases the output size by 16 bytes.
 
@@ -255,9 +255,9 @@ In particular, {{fast-succ-prob}} gives success probabilities for public key and
 | Kemeleon - ML-KEM768     | pk: 1156, ctxt: 1252 | pk: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
 | Kemeleon - ML-KEM1024    | pk: 1530, ctxt: 1658 | pk: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
 | :----------------------- | -------------------: | -------------------: | ------------------------: |
-| KemeleonNR - ML-KEM512   | pk: 797, ctxt: 893   | pk: 1.00, ctxt: 1.00 |                           |
-| KemeleonNR - ML-KEM768   | pk: 1172, ctxt: 1268 | pk: 1.00, ctxt: 1.00 |                           |
-| KemeleonNR - ML-KEM1024  | pk: 1546, ctxt: 1674 | pk: 1.00, ctxt: 1.00 |                           |
+| KemeleonNR - ML-KEM512   | pk: 797, ctxt: 893   | pk: 1.00, ctxt: 1.00 | Large int (775B) arithmetic |
+| KemeleonNR - ML-KEM768   | pk: 1172, ctxt: 1268 | pk: 1.00, ctxt: 1.00 | Large int (1175B) arithmetic |
+| KemeleonNR - ML-KEM1024  | pk: 1546, ctxt: 1674 | pk: 1.00, ctxt: 1.00 | Large int (1515B) arithmetic |
 | :----------------------- | -------------------: | -------------------: | ------------------------: |
 | KemeleonFT - ML-KEM512   | pk: 781, ctxt: 877   | pk: 0.49, ctxt: 0.45 | Smaller int (235B) arithmetic |
 | KemeleonFT - ML-KEM768   | pk: 1156, ctxt: 1252 | pk: 0.29, ctxt: 0.25 | Smaller int (355B) arithmetic |
