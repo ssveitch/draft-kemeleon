@@ -110,7 +110,7 @@ The following variables and functions are adopted from {{FIPS203}}:
 - `q = 3329`, `n = 256`
 - `Compress_d : x -> round((2d/q)*x) mod 2d` (Equation 4.7)
 - `Decompress_d : y -> round((q/2d)*y)` (Equation 4.8)
-- remaining parameters `k`, `d_u`, `d_v`, etc. are defined by the respective ML-KEM parameter set
+- remaining parameters `k`, `d_u`, `d_v`, etc. are defined by the respective ML-KEM parameter set -- this document writes `du` and `dv` in place of `d_u`, `d_v` in pseudocode
 
 `ML-KEM.KeyGen()` (Section 7.1 {{FIPS203}}) produces a public key, `pk`, (termed an encapsulation key in {{FIPS203}}) and a private key, `sk`, (decapsulation key).
 Public keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix `A`.
@@ -171,6 +171,18 @@ SamplePreimage_d(u,c):
       else:
          rand = 0
       return u + rand
+   if d == 5:
+      if c == 0:
+         rand <--$ [-52,...,52]
+      else:
+         rand <--$ [-51,...,52]
+      return u + rand
+   if d == 4:
+      if c == 0:
+         rand <--$ [-104,...,104]
+      else:
+         rand <--$ [-104,...,103]
+      return u + rand
    else:
       return err
 ~~~
@@ -195,20 +207,17 @@ Kemeleon.DecodePk(epk):
 
 ## Encoding Ciphertexts
 
-The following algorithms use global parameters `d_u`, `d_v` defined by the respective ML-KEM parameter set.
-
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
-   d = d_u
-   u = Decompress_d(c_1,d)
+   u = Decompress_du(c_1)
    for i from 1 to k*n:
-      u[i] = SamplePreimage_d(u[i],c_1[i])
+      u[i] = SamplePreimage_du(u[i],c_1[i])
    r = VectorEncode(u)
    if r == err:
       return err
    for i from 1 to n:
       if c_2[1] == 0:
-         return err with prob. 1/ceil(q/(2^d_v))
+         return err with prob. 1/ceil(q/(2^dv))
    return concat(r,c_2)
 ~~~
 
@@ -216,19 +225,68 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
 Kemeleon.DecodeCtxt(ec):
    r,c_2 = ec // c_2 is fixed length
    u = VectorDecode(r)
-   c_1 = Compress_q(u,d_u)
+   c_1 = Compress_du(u)
    return (c_1,c_2)
 ~~~
 
 ## Non-Rejection Sampling Variant
 
 Applying a technique from {{ELL2}} (Section 3.4), the original `Kemeleon` construction can be adapted to avoid rejection sampling.
-This results in slightly larger output sizes, but the encoding algorithm never fails.
-For this variant, where `r` is the encoded vector before rejection occurs in `VectorEncode`, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = log_2(q^(k*n))` and `t = 128`, and return `r + m*q^(k*n)`.
-One MAY select `t` to be a desired security parameter.
+This results in larger output sizes, but the encoding algorithm never fails.
+Applying the technique from {{ELL2}}, where `r` is the encoded vector before rejection occurs in `VectorEncode`, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = log_2(q^(k*n))` and `t` is a security parameter, and return `r + m*q^(k*n)`.
 This variant results in encoded values whose statistical distance from uniform is at most `2^-t`.
-For all inputs (public keys or ciphertexts), this results in an increased output size of `t` bits, where `t` is the security parameter.
+This results in an increased output size of `t` bits, where `t` is the security parameter.
 For example, with `t=128`, this increases the output size by 16 bytes.
+
+For public key encodings, one can immediately replace `VectorEncode` and `VectorDecode` calls with calls to the following algorithms.
+
+~~~
+VectorEncodeNR(a):
+   r = 0
+   t = sec_param // e.g. t = 128, 256, ...
+   b = log_2(q^(k*n))
+   for i from 1 to k*n:
+      r += q^(i-1)*a[i]
+   m <--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
+   return r + m*q^(k*n)
+~~~
+
+~~~
+VectorDecodeNR(a):
+   a = a % q^(k*n)
+   for i from 1 to k*n:
+      a[i] = r % q
+      r = r // q
+   return a
+~~~
+
+Notably, the random value `m` need not be transmitted alongside the encoded values.
+
+For ciphertext encodings, one must also avoid rejection sampling based on coefficients of the second component of the ciphertext.
+Therefore, the new ciphertext encoding must decompress and `VectorEncodeNR` the second component of the ciphertext.
+This more significantly increases the size of the encoded ciphertext.
+
+~~~
+Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
+   u = Decompress_du(c_1)
+   for i from 1 to k*n:
+      u[i] = SamplePreimage_du(u[i],c_1[i])
+   v = Decompress_dv(c_2)
+   for i from 1 to n:
+      v[i] = SamplePreimage_dv(v[i],c_2[i])
+   w = [u,v] // treat u,v as a singular vector of (k+1)*n coefficients
+   r = VectorEncodeNR(w) // this call should use k+1 rather than k when accumulating to a large integer
+   return r
+~~~
+
+~~~
+Kemeleon.DecodeCtxtNR(ec):
+   w = VectorDecodeNR(r)
+   u,v = w // u, v are fixed length
+   c_1 = Compress_du(u)
+   c_2 = Compress_dv(v)
+   return (c_1,c_2)
+~~~
 
 ## Faster Arithmetic Variant
 
@@ -255,9 +313,9 @@ In particular, {{fast-succ-prob}} gives success probabilities for public key and
 | Kemeleon - ML-KEM768     | pk: 1156, ctxt: 1252 | pk: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
 | Kemeleon - ML-KEM1024    | pk: 1530, ctxt: 1658 | pk: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
 | :----------------------- | -------------------: | -------------------: | ------------------------: |
-| KemeleonNR - ML-KEM512   | pk: 797, ctxt: 893   | pk: 1.00, ctxt: 1.00 | Large int (775B) arithmetic |
-| KemeleonNR - ML-KEM768   | pk: 1172, ctxt: 1268 | pk: 1.00, ctxt: 1.00 | Large int (1175B) arithmetic |
-| KemeleonNR - ML-KEM1024  | pk: 1546, ctxt: 1674 | pk: 1.00, ctxt: 1.00 | Large int (1515B) arithmetic |
+| KemeleonNR - ML-KEM512   | pk: 797, ctxt: 1140   | pk: 1.00, ctxt: 1.00 | Large int (1123B) arithmetic |
+| KemeleonNR - ML-KEM768   | pk: 1172, ctxt: 1514 | pk: 1.00, ctxt: 1.00 | Large int (1498B) arithmetic |
+| KemeleonNR - ML-KEM1024  | pk: 1546, ctxt: 1889 | pk: 1.00, ctxt: 1.00 | Large int (1872B) arithmetic |
 | :----------------------- | -------------------: | -------------------: | ------------------------: |
 | KemeleonFT - ML-KEM512   | pk: 781, ctxt: 877   | pk: 0.49, ctxt: 0.45 | Smaller int (235B) arithmetic |
 | KemeleonFT - ML-KEM768   | pk: 1156, ctxt: 1252 | pk: 0.29, ctxt: 0.25 | Smaller int (355B) arithmetic |
