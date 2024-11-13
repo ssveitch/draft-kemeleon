@@ -73,13 +73,13 @@ informative:
 
 --- abstract
 
-This document specifies Kemeleon encoding, algorithms for encoding ML-KEM public keys and ciphertexts as random bytestrings.
+This document specifies Kemeleon encoding algorithms for encoding ML-KEM public keys and ciphertexts as random bytestrings.
 Kemeleon encodings provide obfuscation of public keys and ciphertexts, relying on module LWE assumptions.
 This document specifies a number of variants of these encodings, with differing failure rates, output sizes, and performance profiles.
 
 --- middle
 
-# Introduction
+# Introduction {#intro}
 
 ML-KEM {{FIPS203}} is a post-quantum key-encapsulation mechanism (KEM) recently standardized by NIST,
 Many applications are transitioning from classical Diffie-Hellman (DH) based solutions to constructions based on ML-KEM.
@@ -92,12 +92,12 @@ Kemeleon was introduced in {{GSV24}} for building an (post-quantum) "obfuscated"
 Beyond the original construction, this document additionally specifies variants that avoid the encoding failing or the use of large integer computations, or allow for a deterministic encoding.
 Aside from these variants, it is notable that the Kemeleon encodings of public keys results in smaller representations than in the original ML-KEM specification.
 
-# Conventions and Definitions
+# Conventions and Definitions {#conventions}
 
 {::boilerplate bcp14-tagged}
 
 
-# Notation / ML-KEM Background
+# Notation / ML-KEM Background {#notation}
 
 A KEM consists of three algorithms:
 
@@ -122,7 +122,7 @@ The following terms and notation are used throughout this document:
 - `a[i]` denotes the `i`th position of a vector `a` of coefficients
 - `concat(x0, ..., xN)`: returns the concatenation of bytestrings.
 
-# Kemeleon Encoding
+# Kemeleon Encoding {#kemeleon}
 
 At a high level, the constructions in this document instantiate the following functions:
 
@@ -131,7 +131,9 @@ At a high level, the constructions in this document instantiate the following fu
 - `EncodeCtxt(c) -> ec` is the (possibly randomized) encoding algorithm that on input a ciphertext, outputs an obfuscated ciphertext or an error.
 - `DecodeCtxt(ec) -> c` is the deterministic decoding algorithm that on input an obfuscated ciphertext, outputs a ciphertext.
 
-## Common Functions
+## Common Functions {#common-func}
+
+The following function maps a vector of k*n coefficients modulo q to a large integer, rejecting if the most significant bit of the integer is 1.
 
 ~~~
 VectorEncode(a):
@@ -152,11 +154,11 @@ VectorDecode(r):
    return a
 ~~~
 
-The following algorithm samples an uncompressed pre-image of a coefficient c at random.
+The following algorithm samples an uncompressed pre-image of a coefficient `c` at random, where `u` is the decompressed value of `c`.
 The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}).
 
 ~~~
-SamplePreimage_d(u,c):
+SamplePreimage(d,u,c):
    if d == 10:
       if Compress_d(u + 2) == c:
          rand <--$ [-1,0,1,2]
@@ -187,7 +189,12 @@ SamplePreimage_d(u,c):
       return err
 ~~~
 
-## Encoding Public Keys
+## Encoding Public Keys {#pk-encoding}
+
+The following algorithms encode ML-KEM public keys as random bytestrings.
+`rho` is the public seed used to generate the public matrix `A` {{FIPS203}}.
+This is already a random 32-byte string, so it is returned alongside the encoded value of `t`.
+`t` is a vector of `k` polynomials with `n` coefficients, but in the following pseudocode `t` is treated as a vector of `k*n` coefficients.
 
 ~~~
 Kemeleon.EncodePk(pk = (t, rho)):
@@ -205,13 +212,19 @@ Kemeleon.DecodePk(epk):
    return (t, rho)
 ~~~
 
-## Encoding Ciphertexts
+## Encoding Ciphertexts {#ctxt-encoding}
+
+ML-KEM ciphertexts consist of two components: `c_1`, a vector of `k` polynomials with `n` coefficients mod `2^du`, and `c_2`, a polynomial with `n` coefficients mod `2^dv`.
+The coefficients of these polynomials are not uniformly distributed, as a result of the compression step in encapsulation.
+The following encoding function decompresses and recovers a random preimage of this compression step in order to recover the uniform distribution of coefficients.
+Then, the same vector encoding step used for public keys is applied.
+For the second ciphertext component, rejection sampling is performed to retain uniformity, rather than decompressing.
 
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    u = Decompress_du(c_1)
    for i from 1 to k*n:
-      u[i] = SamplePreimage_du(u[i],c_1[i])
+      u[i] = SamplePreimage(du,u[i],c_1[i])
    r = VectorEncode(u)
    if r == err:
       return err
@@ -229,7 +242,7 @@ Kemeleon.DecodeCtxt(ec):
    return (c_1,c_2)
 ~~~
 
-## Non-Rejection Sampling Variant
+## Non-Rejection Sampling Variant {#no-rejection}
 
 Applying a technique from {{ELL2}} (Section 3.4), the original `Kemeleon` construction can be adapted to avoid rejection sampling.
 This results in larger output sizes, but the encoding algorithm never fails.
@@ -270,10 +283,10 @@ This more significantly increases the size of the encoded ciphertext.
 Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
    u = Decompress_du(c_1)
    for i from 1 to k*n:
-      u[i] = SamplePreimage_du(u[i],c_1[i])
+      u[i] = SamplePreimage(du,u[i],c_1[i])
    v = Decompress_dv(c_2)
    for i from 1 to n:
-      v[i] = SamplePreimage_dv(v[i],c_2[i])
+      v[i] = SamplePreimage(dv,v[i],c_2[i])
    w = [u,v] // treat u,v as a singular vector of (k+1)*n coefficients
    r = VectorEncodeNR(w) // this call should use k+1 rather than k when accumulating to a large integer
    return r
@@ -288,7 +301,7 @@ Kemeleon.DecodeCtxtNR(ec):
    return (c_1,c_2)
 ~~~
 
-## Faster Arithmetic Variant
+## Faster Arithmetic Variant {#faster}
 
 Observing that `q = 3329 = 13*2^8+1`, a variant of `Kemeleon` with faster integer arithmetic can be specified.
 First, the encoding rejects any polynomial with a coefficient equal to `q-1 = 3328`.
@@ -305,7 +318,22 @@ In particular, {{fast-succ-prob}} gives success probabilities for public key and
 | ML-KEM-1024   |                  0.53  |                     0.47 |
 {: #fast-succ-prob title="Success probabilities for faster Kemeleon encoding"}
 
-## Summary of Encodings
+## Deterministic Encoding {#deterministic}
+
+The randomness used in `Kemeleon` ciphertext encodings MAY be derived in a deterministic manner.
+To do so, following a call to `Encap` which returns a KEM key `K` and a ciphertext `c`, the following steps can be taken:
+
+- Using a key derivation function (KDF), derive from the key `K` a new key `K'` and a seed for randomness `rnd`.
+- The seed `rnd` can be used to generate the randomness required when encoding the ciphertext `c`.
+- Use `K'` in place of `K` wherever applicable in the remainder of the protocol/system.
+- Upon any call to `Decap`, apply the same KDF to derive the new key `K'`, as required.
+
+Deriving a new KEM key for use in the remainder of a system is suggested in order to provide key separation (i.e., not use the original key `K` to derive randomness and for other purposes).
+
+The randomness used to encode a public key MAY be stored alongside the corresponding secret key, if it is subsequently needed.
+See {{randomness-security}} for relevant discussion on keeping this randomness secret.
+
+## Summary of Encodings {#comparison}
 
 | Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations |
 | :----------------------- | -------------------: | -------------------: | ------------------------: |
@@ -323,19 +351,19 @@ In particular, {{fast-succ-prob}} gives success probabilities for public key and
 {: #summary-encoding title="Summary of Kemeleon Variants, NR = No Reject, FT = Faster"}
 
 
-# Security Considerations
+# Security Considerations {#security}
 
 This section contains additional security considerations about the Kemeleon encodings described in this document.
 
 In general, the obfuscation properties of the Kemeleon encodings depend on module LWE assumptions similar to those underlying the IND-CCA security of ML-KEM; see {{GSV24}} for the detailed security analysis of the original Kemeleon encoding.
 
-## Randomness Sampling
+## Randomness Sampling {#randomness-security}
 Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
 The randomness (or seed used to generate randomness) used in Kemeleon encodings MUST be kept secret.
 In particular, public randomness enables distinguishing a Kemeleon-encoded value from a random bytestring:
 Decoding the value in question and re-encoding it with the public randomness will yield the original value if it was Kemeleon-encoded.
 
-## Timing Side-Channels
+## Timing Side-Channels {#timing-security}
 Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings, in particular those with a non-zero failure probability.
 Rejecting and re-generating public keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.
 
