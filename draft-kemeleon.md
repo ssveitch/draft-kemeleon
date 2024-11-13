@@ -207,7 +207,7 @@ Kemeleon.EncodePk(pk = (t, rho)):
 
 ~~~
 Kemeleon.DecodePk(epk):
-   r,rho = epk // rho is fixed length
+   r,rho = epk # rho is fixed length
    t = VectorDecode(r)
    return (t, rho)
 ~~~
@@ -236,7 +236,7 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
 
 ~~~
 Kemeleon.DecodeCtxt(ec):
-   r,c_2 = ec // c_2 is fixed length
+   r,c_2 = ec # c_2 is fixed length
    u = VectorDecode(r)
    c_1 = Compress_du(u)
    return (c_1,c_2)
@@ -256,7 +256,7 @@ For public key encodings, one can immediately replace `VectorEncode` and `Vector
 ~~~
 VectorEncodeNR(a):
    r = 0
-   t = sec_param // e.g. t = 128, 256, ...
+   t = sec_param # e.g. t = 128, 256, ...
    b = log_2(q^(k*n))
    for i from 1 to k*n:
       r += q^(i-1)*a[i]
@@ -287,15 +287,15 @@ Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
    v = Decompress_dv(c_2)
    for i from 1 to n:
       v[i] = SamplePreimage(dv,v[i],c_2[i])
-   w = [u,v] // treat u,v as a singular vector of (k+1)*n coefficients
-   r = VectorEncodeNR(w) // this call should use k+1 rather than k when accumulating to a large integer
+   w = [u,v] # treat u,v as a singular vector of (k+1)*n coefficients
+   r = VectorEncodeNR(w) # this call should use k+1 rather than k when accumulating to a large integer
    return r
 ~~~
 
 ~~~
 Kemeleon.DecodeCtxtNR(ec):
    w = VectorDecodeNR(r)
-   u,v = w // u, v are fixed length
+   u,v = w # u, v are fixed length
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
    return (c_1,c_2)
