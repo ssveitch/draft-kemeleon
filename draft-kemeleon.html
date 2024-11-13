@@ -13,17 +13,17 @@
 Kemeleon encodings provide obfuscation of public keys and ciphertexts, relying on module LWE assumptions.
 This document specifies a number of variants of these encodings, with differing failure rates, output sizes, and performance profiles. 
     " name="description">
-<meta content="xml2rfc 3.23.2" name="generator">
+<meta content="xml2rfc 3.24.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-kemeleon-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.23.2
+  xml2rfc 3.24.0
     Python 3.12.7
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
     intervaltree 3.1.0
     Jinja2 3.1.4
-    lxml 4.9.4
+    lxml 5.3.0
     platformdirs 4.3.6
     pycountry 22.3.5
     PyYAML 6.0.1
@@ -1085,7 +1085,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Günther, et al.</td>
-<td class="center">Expires 6 May 2025</td>
+<td class="center">Expires 17 May 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1098,12 +1098,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-kemeleon-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-11-02" class="published">2 November 2024</time>
+<time datetime="2024-11-13" class="published">13 November 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-05-06">6 May 2025</time></dd>
+<dd class="expires"><time datetime="2025-05-17">17 May 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1158,7 +1158,7 @@ This document specifies a number of variants of these encodings, with differing 
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 6 May 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 17 May 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1310,7 +1310,7 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
           <p id="section-3-4.3.1"><code>Decompress_d : y -&gt; round((q/2d)*y)</code> (Equation 4.8)<a href="#section-3-4.3.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-4.4">
-          <p id="section-3-4.4.1">remaining parameters <code>k</code>, <code>d_u</code>, <code>d_v</code>, etc. are defined by the respective ML-KEM parameter set<a href="#section-3-4.4.1" class="pilcrow">¶</a></p>
+          <p id="section-3-4.4.1">remaining parameters <code>k</code>, <code>d_u</code>, <code>d_v</code>, etc. are defined by the respective ML-KEM parameter set -- this document writes <code>du</code> and <code>dv</code> in place of <code>d_u</code>, <code>d_v</code> in pseudocode<a href="#section-3-4.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <p id="section-3-5"><code>ML-KEM.KeyGen()</code> (Section 7.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces a public key, <code>pk</code>, (termed an encapsulation key in <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) and a private key, <code>sk</code>, (decapsulation key).
@@ -1395,6 +1395,18 @@ SamplePreimage_d(u,c):
       else:
          rand = 0
       return u + rand
+   if d == 5:
+      if c == 0:
+         rand &lt;--$ [-52,...,52]
+      else:
+         rand &lt;--$ [-51,...,52]
+      return u + rand
+   if d == 4:
+      if c == 0:
+         rand &lt;--$ [-104,...,104]
+      else:
+         rand &lt;--$ [-104,...,103]
+      return u + rand
    else:
       return err
 </pre><a href="#section-4.1-4" class="pilcrow">¶</a>
@@ -1431,31 +1443,29 @@ Kemeleon.DecodePk(epk):
         <h3 id="name-encoding-ciphertexts">
 <a href="#section-4.3" class="section-number selfRef">4.3. </a><a href="#name-encoding-ciphertexts" class="section-name selfRef">Encoding Ciphertexts</a>
         </h3>
-<p id="section-4.3-1">The following algorithms use global parameters <code>d_u</code>, <code>d_v</code> defined by the respective ML-KEM parameter set.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-2">
+<div class="alignLeft art-text artwork" id="section-4.3-1">
 <pre>
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
-   d = d_u
-   u = Decompress_d(c_1,d)
+   u = Decompress_du(c_1)
    for i from 1 to k*n:
-      u[i] = SamplePreimage_d(u[i],c_1[i])
+      u[i] = SamplePreimage_du(u[i],c_1[i])
    r = VectorEncode(u)
    if r == err:
       return err
    for i from 1 to n:
       if c_2[1] == 0:
-         return err with prob. 1/ceil(q/(2^d_v))
+         return err with prob. 1/ceil(q/(2^dv))
    return concat(r,c_2)
-</pre><a href="#section-4.3-2" class="pilcrow">¶</a>
+</pre><a href="#section-4.3-1" class="pilcrow">¶</a>
 </div>
-<div class="alignLeft art-text artwork" id="section-4.3-3">
+<div class="alignLeft art-text artwork" id="section-4.3-2">
 <pre>
 Kemeleon.DecodeCtxt(ec):
    r,c_2 = ec // c_2 is fixed length
    u = VectorDecode(r)
-   c_1 = Compress_q(u,d_u)
+   c_1 = Compress_du(u)
    return (c_1,c_2)
-</pre><a href="#section-4.3-3" class="pilcrow">¶</a>
+</pre><a href="#section-4.3-2" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1465,12 +1475,62 @@ Kemeleon.DecodeCtxt(ec):
 <a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-non-rejection-sampling-vari" class="section-name selfRef">Non-Rejection Sampling Variant</a>
         </h3>
 <p id="section-4.4-1">Applying a technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span> (Section 3.4), the original <code>Kemeleon</code> construction can be adapted to avoid rejection sampling.
-This results in slightly larger output sizes, but the encoding algorithm never fails.
-For this variant, where <code>r</code> is the encoded vector before rejection occurs in <code>VectorEncode</code>, we then choose <code>m</code> at random from <code>[0,floor((2^(b+t)-r)/(q^(k*n)))]</code>, where <code>b = log_2(q^(k*n))</code> and <code>t = 128</code>, and return <code>r + m*q^(k*n)</code>.
-One <span class="bcp14">MAY</span> select <code>t</code> to be a desired security parameter.
+This results in larger output sizes, but the encoding algorithm never fails.
+Applying the technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span>, where <code>r</code> is the encoded vector before rejection occurs in <code>VectorEncode</code>, we then choose <code>m</code> at random from <code>[0,floor((2^(b+t)-r)/(q^(k*n)))]</code>, where <code>b = log_2(q^(k*n))</code> and <code>t</code> is a security parameter, and return <code>r + m*q^(k*n)</code>.
 This variant results in encoded values whose statistical distance from uniform is at most <code>2^-t</code>.
-For all inputs (public keys or ciphertexts), this results in an increased output size of <code>t</code> bits, where <code>t</code> is the security parameter.
+This results in an increased output size of <code>t</code> bits, where <code>t</code> is the security parameter.
 For example, with <code>t=128</code>, this increases the output size by 16 bytes.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.4-2">For public key encodings, one can immediately replace <code>VectorEncode</code> and <code>VectorDecode</code> calls with calls to the following algorithms.<a href="#section-4.4-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.4-3">
+<pre>
+VectorEncodeNR(a):
+   r = 0
+   t = sec_param // e.g. t = 128, 256, ...
+   b = log_2(q^(k*n))
+   for i from 1 to k*n:
+      r += q^(i-1)*a[i]
+   m &lt;--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
+   return r + m*q^(k*n)
+</pre><a href="#section-4.4-3" class="pilcrow">¶</a>
+</div>
+<div class="alignLeft art-text artwork" id="section-4.4-4">
+<pre>
+VectorDecodeNR(a):
+   a = a % q^(k*n)
+   for i from 1 to k*n:
+      a[i] = r % q
+      r = r // q
+   return a
+</pre><a href="#section-4.4-4" class="pilcrow">¶</a>
+</div>
+<p id="section-4.4-5">Notably, the random value <code>m</code> need not be transmitted alongside the encoded values.<a href="#section-4.4-5" class="pilcrow">¶</a></p>
+<p id="section-4.4-6">For ciphertext encodings, one must also avoid rejection sampling based on coefficients of the second component of the ciphertext.
+Therefore, the new ciphertext encoding must decompress and <code>VectorEncodeNR</code> the second component of the ciphertext.
+This more significantly increases the size of the encoded ciphertext.<a href="#section-4.4-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.4-7">
+<pre>
+Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
+   u = Decompress_du(c_1)
+   for i from 1 to k*n:
+      u[i] = SamplePreimage_du(u[i],c_1[i])
+   v = Decompress_dv(c_2)
+   for i from 1 to n:
+      v[i] = SamplePreimage_dv(v[i],c_2[i])
+   w = [u,v] // treat u,v as a singular vector of (k+1)*n coefficients
+   r = VectorEncodeNR(w) // this call should use k+1 rather than k when accumulating to a large integer
+   return r
+</pre><a href="#section-4.4-7" class="pilcrow">¶</a>
+</div>
+<div class="alignLeft art-text artwork" id="section-4.4-8">
+<pre>
+Kemeleon.DecodeCtxtNR(ec):
+   w = VectorDecodeNR(r)
+   u,v = w // u, v are fixed length
+   c_1 = Compress_du(u)
+   c_2 = Compress_dv(v)
+   return (c_1,c_2)
+</pre><a href="#section-4.4-8" class="pilcrow">¶</a>
+</div>
 </section>
 </div>
 <div id="faster-arithmetic-variant">
@@ -1558,21 +1618,21 @@ The output size of the encoding does not change, but this results in an increase
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM512</td>
-              <td class="text-right" rowspan="1" colspan="1">pk: 797, ctxt: 893</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 797, ctxt: 1140</td>
               <td class="text-right" rowspan="1" colspan="1">pk: 1.00, ctxt: 1.00</td>
-              <td class="text-right" rowspan="1" colspan="1">Large int (775B) arithmetic</td>
+              <td class="text-right" rowspan="1" colspan="1">Large int (1123B) arithmetic</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM768</td>
-              <td class="text-right" rowspan="1" colspan="1">pk: 1172, ctxt: 1268</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1172, ctxt: 1514</td>
               <td class="text-right" rowspan="1" colspan="1">pk: 1.00, ctxt: 1.00</td>
-              <td class="text-right" rowspan="1" colspan="1">Large int (1175B) arithmetic</td>
+              <td class="text-right" rowspan="1" colspan="1">Large int (1498B) arithmetic</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM1024</td>
-              <td class="text-right" rowspan="1" colspan="1">pk: 1546, ctxt: 1674</td>
+              <td class="text-right" rowspan="1" colspan="1">pk: 1546, ctxt: 1889</td>
               <td class="text-right" rowspan="1" colspan="1">pk: 1.00, ctxt: 1.00</td>
-              <td class="text-right" rowspan="1" colspan="1">Large int (1515B) arithmetic</td>
+              <td class="text-right" rowspan="1" colspan="1">Large int (1872B) arithmetic</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">KemeleonFT - ML-KEM512</td>
