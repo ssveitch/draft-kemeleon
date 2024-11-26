@@ -328,7 +328,7 @@ To do so, following a call to `Encap` which returns a KEM key `K` and a cipherte
 - Use `K'` in place of `K` wherever applicable in the remainder of the protocol/system.
 - Upon any call to `Decap`, apply the same KDF to derive the new key `K'`, as required.
 
-Deriving a new KEM key for use in the remainder of a system is suggested in order to provide key separation (i.e., not use the original key `K` to derive randomness and for other purposes).
+Deriving a new KEM key for use in the remainder of a system is crucial in order to ensure key separation (i.e., not using the original key `K` to derive randomness and for other purposes).
 
 The randomness used to encode a public key MAY be stored alongside the corresponding secret key, if it is subsequently needed.
 See {{randomness-security}} for relevant discussion on keeping this randomness secret.
