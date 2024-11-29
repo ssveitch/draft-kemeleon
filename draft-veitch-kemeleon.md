@@ -3,7 +3,7 @@ title: "Kemeleon Encodings"
 abbrev: "Kemeleon"
 category: info
 
-docname: draft-kemeleon-latest
+docname: draft-veitch-kemeleon-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
