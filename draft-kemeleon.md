@@ -303,6 +303,8 @@ Kemeleon.DecodeCtxtNR(ec):
 
 ## Faster Arithmetic Variant {#faster}
 
+[OPEN ISSUE: Is the faster variant of interest? If so, the following can be extended with a complete description.]
+
 Observing that `q = 3329 = 13*2^8+1`, a variant of `Kemeleon` with faster integer arithmetic can be specified.
 First, the encoding rejects any polynomial with a coefficient equal to `q-1 = 3328`.
 This ensures that all arithmetic can be computed with values modulo `q-1 = 13*2^8`.
@@ -374,6 +376,3 @@ This document has no IANA actions.
 
 --- back
 
-# Acknowledgments
-
-TODO acknowledge.
