@@ -1048,7 +1048,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Günther, et al.</td>
-<td class="center">Expires 30 May 2025</td>
+<td class="center">Expires 2 June 2025</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-kemeleon-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2024-11-26" class="published">26 November 2024</time>
+<time datetime="2024-11-29" class="published">29 November 2024</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2025-05-30">30 May 2025</time></dd>
+<dd class="expires"><time datetime="2025-06-02">2 June 2025</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1121,7 +1121,7 @@ This document specifies a number of variants of these encodings, with differing 
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 30 May 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 2 June 2025.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1211,10 +1211,7 @@ This document specifies a number of variants of these encodings, with differing 
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
-</li>
-          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.8.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1514,12 +1511,13 @@ Kemeleon.DecodeCtxtNR(ec):
         <h3 id="name-faster-arithmetic-variant">
 <a href="#section-4.5" class="section-number selfRef">4.5. </a><a href="#name-faster-arithmetic-variant" class="section-name selfRef">Faster Arithmetic Variant</a>
         </h3>
-<p id="section-4.5-1">Observing that <code>q = 3329 = 13*2^8+1</code>, a variant of <code>Kemeleon</code> with faster integer arithmetic can be specified.
+<p id="section-4.5-1">[OPEN ISSUE: Is the faster variant of interest? If so, the following can be extended with a complete description.]<a href="#section-4.5-1" class="pilcrow">¶</a></p>
+<p id="section-4.5-2">Observing that <code>q = 3329 = 13*2^8+1</code>, a variant of <code>Kemeleon</code> with faster integer arithmetic can be specified.
 First, the encoding rejects any polynomial with a coefficient equal to <code>q-1 = 3328</code>.
 This ensures that all arithmetic can be computed with values modulo <code>q-1 = 13*2^8</code>.
 Then, note that rather than accumulating values to a large integer mod <code>q^(k*n)</code>, it is only required to accumulate values to an integer mod <code>13^(k*n)</code>, while keeping track of the 8 lower order bits of each coefficient.
-The output size of the encoding does not change, but this results in an increased rejection rate.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
-<p id="section-4.5-2">In particular, <a href="#fast-succ-prob" class="auto internal xref">Table 1</a> gives success probabilities for public key and ciphertext encodings:<a href="#section-4.5-2" class="pilcrow">¶</a></p>
+The output size of the encoding does not change, but this results in an increased rejection rate.<a href="#section-4.5-2" class="pilcrow">¶</a></p>
+<p id="section-4.5-3">In particular, <a href="#fast-succ-prob" class="auto internal xref">Table 1</a> gives success probabilities for public key and ciphertext encodings:<a href="#section-4.5-3" class="pilcrow">¶</a></p>
 <span id="name-success-probabilities-for-f"></span><div id="fast-succ-prob">
 <table class="center" id="table-1">
           <caption>
@@ -1763,16 +1761,8 @@ Rejecting and re-generating public keys or ciphertexts may leak information abou
 </div>
 </section>
 </div>
-<div id="acknowledgments">
-<section id="appendix-A">
-      <h2 id="name-acknowledgments">
-<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
-      </h2>
-<p id="appendix-A-1">TODO acknowledge.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
-</section>
-</div>
 <div id="authors-addresses">
-<section id="appendix-B">
+<section id="appendix-A">
       <h2 id="name-authors-addresses">
 <a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>

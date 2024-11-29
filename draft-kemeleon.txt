@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 30 May 2025                              University of Waterloo
+Expires: 2 June 2025                              University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                        26 November 2024
+                                                        29 November 2024
 
 
                            Kemeleon Encodings
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 May 2025.
+   This Internet-Draft will expire on 2 June 2025.
 
 Copyright Notice
 
@@ -86,7 +86,6 @@ Table of Contents
    7.  References
      7.1.  Normative References
      7.2.  Informative References
-   Appendix A.  Acknowledgments
    Authors' Addresses
 
 1.  Introduction
@@ -357,6 +356,9 @@ Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
 
 4.5.  Faster Arithmetic Variant
 
+   [OPEN ISSUE: Is the faster variant of interest?  If so, the following
+   can be extended with a complete description.]
+
    Observing that q = 3329 = 13*2^8+1, a variant of Kemeleon with faster
    integer arithmetic can be specified.  First, the encoding rejects any
    polynomial with a coefficient equal to q-1 = 3328.  This ensures that
@@ -532,10 +534,6 @@ Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
               Internet-Draft, draft-irtf-cfrg-opaque-18, 21 November
               2024, <https://datatracker.ietf.org/doc/html/draft-irtf-
               cfrg-opaque-18>.
-
-Appendix A.  Acknowledgments
-
-   TODO acknowledge.
 
 Authors' Addresses
 
