@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-02-25T00:33:30.938311+00:00",
+  "timestamp": "2025-02-27T00:30:01.608555+00:00",
   "repo": "ssveitch/draft-kemeleon",
   "labels": [
     {
@@ -49,6 +49,55 @@
       "color": "ffffff"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "number": 1,
+      "id": "I_kwDOM2GZlM6ryBvx",
+      "title": "FIPS 203 terminology",
+      "url": "https://github.com/ssveitch/draft-kemeleon/issues/1",
+      "state": "OPEN",
+      "author": "fxguenther",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "John Mattson (Feb 26 CFRG email) suggested:\n\n> \u201cML-KEM.KeyGen() (Section 7.1 [FIPS203]) produces a public key, pk, (termed an encapsulation key in [FIPS203]) and a private key, sk, (decapsulation key).\u201d\n> \n> I don\u2019t think there is any reason to change the terminology from FIPS 204. I suggest not changing and using ek and dk\n",
+      "createdAt": "2025-02-26T15:33:13Z",
+      "updatedAt": "2025-02-26T15:33:13Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 2,
+      "id": "I_kwDOM2GZlM6ryDgO",
+      "title": "Directly generating obfuscated ML-Kemeleon keys/ciphertexts (modifying FIPS 203 algorithms)",
+      "url": "https://github.com/ssveitch/draft-kemeleon/issues/2",
+      "state": "OPEN",
+      "author": "fxguenther",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "John Mattson (Feb 26 CFRG email) suggested:\n\n> The Kemeleon approach is useful if you have ML-KEM in hardware and wants to obfuscate in software. For an implementation like Tor that always obfuscated public keys and ciphertexts, I don\u2019t think compressing and then decompressing and rejection sampling makes any sense. It is a waste of CPU cycles and energy. I think the document should describe how the algorithms in FIPS 203 can be modified to include the Kemeleon encoding directly without reencoding. I think this would be a more useful approach for most implementations requiring obfuscated keys.\n",
+      "createdAt": "2025-02-26T15:35:45Z",
+      "updatedAt": "2025-02-26T15:35:45Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 3,
+      "id": "I_kwDOM2GZlM6ry6g1",
+      "title": "Add Kemeleon implementation precautions discussion to Security Considerations",
+      "url": "https://github.com/ssveitch/draft-kemeleon/issues/3",
+      "state": "OPEN",
+      "author": "fxguenther",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "incl. NIST talk points",
+      "createdAt": "2025-02-26T17:02:34Z",
+      "updatedAt": "2025-02-26T17:02:34Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
   "pulls": []
 }
