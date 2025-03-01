@@ -212,6 +212,9 @@ Kemeleon.DecodePk(epk):
    return (t, rho)
 ~~~
 
+While the public key encoding algorithm has some failure probability, the decoding algorithm can never fail.
+Otherwise, a failure in decoding would provide a distinguishing factor between Kemeleon-encoded values and random bitstrings.
+
 ## Encoding Ciphertexts {#ctxt-encoding}
 
 ML-KEM ciphertexts consist of two components: `c_1`, a vector of `k` polynomials with `n` coefficients mod `2^du`, and `c_2`, a polynomial with `n` coefficients mod `2^dv`.
@@ -293,7 +296,7 @@ Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
 ~~~
 
 ~~~
-Kemeleon.DecodeCtxtNR(ec):
+Kemeleon.DecodeCtxtNR(r):
    w = VectorDecodeNR(r)
    u,v = w # u, v are fixed length
    c_1 = Compress_du(u)
@@ -320,21 +323,6 @@ In particular, {{fast-succ-prob}} gives success probabilities for public key and
 | ML-KEM-1024   |                  0.53  |                     0.47 |
 {: #fast-succ-prob title="Success probabilities for faster Kemeleon encoding"}
 
-## Deterministic Encoding {#deterministic}
-
-The randomness used in `Kemeleon` ciphertext encodings MAY be derived in a deterministic manner.
-To do so, following a call to `Encap` which returns a KEM key `K` and a ciphertext `c`, the following steps can be taken:
-
-- Using a key derivation function (KDF), derive from the key `K` a new key `K'` and a seed for randomness `rnd`.
-- The seed `rnd` can be used to generate the randomness required when encoding the ciphertext `c`.
-- Use `K'` in place of `K` wherever applicable in the remainder of the protocol/system.
-- Upon any call to `Decap`, apply the same KDF to derive the new key `K'`, as required.
-
-Deriving a new KEM key for use in the remainder of a system is crucial in order to ensure key separation (i.e., not using the original key `K` to derive randomness and for other purposes).
-
-The randomness used to encode a public key MAY be stored alongside the corresponding secret key, if it is subsequently needed.
-See {{randomness-security}} for relevant discussion on keeping this randomness secret.
-
 ## Summary of Encodings {#comparison}
 
 | Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations |
@@ -352,12 +340,63 @@ See {{randomness-security}} for relevant discussion on keeping this randomness s
 | KemeleonFT - ML-KEM1024  | pk: 1530, ctxt: 1658 | pk: 0.53, ctxt: 0.47 | Smaller int (475B) arithmetic |
 {: #summary-encoding title="Summary of Kemeleon Variants, NR = No Reject, FT = Faster"}
 
+# Additional Considerations for Applications {#considerations}
+
+This section contains additional considerations and comments related to using Kemeleon encodings in different applications.
+
+## Deterministic Encoding {#deterministic}
+
+The randomness used in `Kemeleon` ciphertext encodings MAY be derived in a deterministic manner.
+To do so, following a call to `Encap` which returns a KEM key `K` and a ciphertext `c`, the following steps can be taken:
+
+- Using a key derivation function (KDF), derive from the key `K` a new key `K'` and a seed for randomness `rnd`.
+- The seed `rnd` can be used to generate the randomness required when encoding the ciphertext `c`.
+- Use `K'` in place of `K` wherever applicable in the remainder of the protocol/system.
+- Upon any call to `Decap`, apply the same KDF to derive the new key `K'`, as required.
+
+Deriving a new KEM key for use in the remainder of a system is crucial in order to ensure key separation (i.e., the implementation MUST NOT use the original key `K` to derive randomness and for other purposes).
+
+The randomness used to encode a public key MAY be stored alongside the corresponding secret key, if it is subsequently needed.
+See {{randomness-security}} for relevant discussion on keeping this randomness secret.
+
+## Relation to Hash-to-Curve {#hash-to-curve}
+
+While the functionality of Kemeleon is similar to hash-to-curve {{RFC9380}} (mapping arbitrary byte strings to public keys/ciphertexts), the applications where hash-to-curve is used do not immediately follow in the KEM-based setting because having such a public key (without sk) or ciphertext (without sk or pk) does not appear to provide the same functionality, since it is not clear how to continue working with the element in the same way that can be done with an elliptic curve point.
+
+## Modifying ML-KEM Algorithms {#direct-generation}
+
+In applications that _only_ require Kemeleon-encoded values _and_ where the underlying ML-KEM implementation can be modified, the ciphertext encoding algorithm (and ML-KEM encapsulation/decapsulation algorithms) MAY be adapted as follows for improved efficiency.
+In particular, the compression step in the ML-KEM encapsulation algorithm can be omitted, and therefore, the decompression step in the Kemeleon algorithm can be omitted.
+In the implementation of ML-KEM, the compression step (lines 22-23 of Algorithm 14 {{FIPS203}}) and corresponding decompression step (lines 3-4 of Algorithm 15 {{FIPS203}}) can be omitted from the encapsulation/decapsulation algorithms in ML-KEM.
+In this case, the Kemeleon encoding algorithm for ciphertexts would omit the `Decompress` and `SamplePreimage` steps and immediately apply `VectorEncode`:
+
+~~~
+Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+   w = [c_1,c_2] # treat c_1,c_2 as a singular vector of (k+1)*n coefficients
+   r = VectorEncode(w) # this call should use k+1 rather than k when accumulating to a large integer
+   return r
+~~~
+
+Decoding is adapted analogously.
+
+~~~
+Kemeleon.DecodeCtxt(ec):
+   w = VectorDecode(r)
+   c_1,c_2 = w # c_1, c_2 are fixed length
+   return (c_1,c_2)
+~~~
+
+Naturally, these algorithms can use `VectorEncodeNR`, `VectorDecodeNR`, if the non-rejecting variant is desirable.
 
 # Security Considerations {#security}
 
 This section contains additional security considerations about the Kemeleon encodings described in this document.
 
+## Computational Assumptions {#assumptions}
 In general, the obfuscation properties of the Kemeleon encodings depend on module LWE assumptions similar to those underlying the IND-CCA security of ML-KEM; see {{GSV24}} for the detailed security analysis of the original Kemeleon encoding.
+In particular, the notions of public key and ciphertext uniformity capture the indistinguishability of Kemeleon-encoded public keys and ciphertexts from random bitstrings, respectively.
+Both require the module LWE assumption to hold in order for Kemeleon to maintain its uniformity properties.
+Furthermore, distinguishing a pair of a Kemeleon-encoded public key and a Kemeleon-encoded ciphertext from uniformly random bitstrings also reduces to a module LWE assumption.
 
 ## Randomness Sampling {#randomness-security}
 Both public key and ciphertext encodings in the original Kemeleon encoding are randomized.
@@ -368,6 +407,7 @@ Decoding the value in question and re-encoding it with the public randomness wil
 ## Timing Side-Channels {#timing-security}
 Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings, in particular those with a non-zero failure probability.
 Rejecting and re-generating public keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.
+Additionally, the algorithms required to perform big integer arithmetic may leak information via timing.
 
 # IANA Considerations
 
