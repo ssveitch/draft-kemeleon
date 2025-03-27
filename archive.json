@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-03-25T00:31:41.489609+00:00",
+  "timestamp": "2025-03-27T00:31:17.814429+00:00",
   "repo": "ssveitch/draft-kemeleon",
   "labels": [
     {
@@ -55,15 +55,15 @@
       "id": "I_kwDOM2GZlM6ryBvx",
       "title": "FIPS 203 terminology",
       "url": "https://github.com/ssveitch/draft-kemeleon/issues/1",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "fxguenther",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "John Mattson (Feb 26 CFRG email) suggested:\n\n> \u201cML-KEM.KeyGen() (Section 7.1 [FIPS203]) produces a public key, pk, (termed an encapsulation key in [FIPS203]) and a private key, sk, (decapsulation key).\u201d\n> \n> I don\u2019t think there is any reason to change the terminology from FIPS 204. I suggest not changing and using ek and dk\n",
       "createdAt": "2025-02-26T15:33:13Z",
-      "updatedAt": "2025-02-26T15:33:13Z",
-      "closedAt": null,
+      "updatedAt": "2025-03-26T08:17:07Z",
+      "closedAt": "2025-03-26T08:17:07Z",
       "comments": []
     },
     {
