@@ -17,7 +17,7 @@
 /versioned/
 Gemfile.lock
 archive.json
-draft-kemeleon.xml
+draft-irtf-cfrg-kemeleon.xml
 package-lock.json
 report.xml
 !requirements.txt

@@ -3,22 +3,28 @@ title: "Kemeleon Encodings"
 abbrev: "Kemeleon"
 category: info
 
-docname: draft-veitch-kemeleon-latest
-submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
-number:
+docname: draft-irtf-cfrg-kemeleon-latest
+submissiontype: IRTF  # also: "independent", "editorial", "IAB", or "IRTF"
+# number:
 date:
-consensus: true
-v: 3
+# consensus: true
+# v: 3
 # area: AREA
 # workgroup: WG Working Group
+
+ipr: trust200902
 keyword: Internet-Draft
+
+stand_alone: yes
+pi: [toc, sortrefs, symrefs]
+
 venue:
 #  group: WG
 #  type: Working Group
 #  mail: WG@example.com
 #  arch: https://example.com/WG
   github: "ssveitch/draft-kemeleon"
-  latest: "https://ssveitch.github.io/draft-kemeleon/draft-veitch-kemeleon.html"
+  latest: "https://ssveitch.github.io/draft-kemeleon/draft-irtf-cfrg-kemeleon.html"
 
 author:
  -
@@ -306,7 +312,7 @@ Kemeleon.DecodeCtxtNR(r):
 
 ## Faster Arithmetic Variant {#faster}
 
-[OPEN ISSUE: Is the faster variant of interest? If so, the following can be extended with a complete description.]
+OPEN ISSUE: Is the faster variant of interest? If so, the following can be extended with a complete description.
 
 Observing that `q = 3329 = 13*2^8+1`, a variant of `Kemeleon` with faster integer arithmetic can be specified.
 First, the encoding rejects any polynomial with a coefficient equal to `q-1 = 3328`.
