@@ -114,8 +114,8 @@ A KEM consists of three algorithms:
 The following variables and functions are adopted from {{FIPS203}}:
 
 - `q = 3329`, `n = 256`
-- `Compress_d : x -> round((2d/q)*x) mod 2d` (Equation 4.7)
-- `Decompress_d : y -> round((q/2d)*y)` (Equation 4.8)
+- `Compress_d : x -> round((2^d/q)*x) mod 2^d` (Equation 4.7)
+- `Decompress_d : y -> round((q/2^d)*y)` (Equation 4.8)
 - remaining parameters `k`, `d_u`, `d_v`, etc. are defined by the respective ML-KEM parameter set -- this document writes `du` and `dv` in place of `d_u`, `d_v` in pseudocode
 
 `ML-KEM.KeyGen()` (Section 7.1 {{FIPS203}}) produces an encapsulation key, `ek` and a decapsulation key, `dk`.
