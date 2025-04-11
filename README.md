@@ -2,10 +2,10 @@
 
 This is the working area for the individual Internet-Draft, "Kemeleon Encodings".
 
-* [Editor's Copy](https://ssveitch.github.io/draft-kemeleon/#go.draft-kemeleon.html)
-* [Datatracker Page](https://datatracker.ietf.org/doc/draft-kemeleon)
-* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-kemeleon)
-* [Compare Editor's Copy to Individual Draft](https://ssveitch.github.io/draft-kemeleon/#go.draft-kemeleon.diff)
+* [Editor's Copy](https://ssveitch.github.io/draft-kemeleon/#go.draft-irtf-cfrg-kemeleon.html)
+* [Datatracker Page](https://datatracker.ietf.org/doc/draft-irtf-cfrg-kemeleon)
+* [Individual Draft](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-kemeleon)
+* [Compare Editor's Copy to Individual Draft](https://ssveitch.github.io/draft-kemeleon/#go.draft-irtf-cfrg-kemeleon.diff)
 
 
 ## Contributing
