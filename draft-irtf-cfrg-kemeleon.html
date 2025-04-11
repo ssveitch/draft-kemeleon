@@ -1282,10 +1282,10 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
           <p id="section-3-4.1.1"><code>q = 3329</code>, <code>n = 256</code><a href="#section-3-4.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-4.2">
-          <p id="section-3-4.2.1"><code>Compress_d : x -&gt; round((2d/q)*x) mod 2d</code> (Equation 4.7)<a href="#section-3-4.2.1" class="pilcrow">¶</a></p>
+          <p id="section-3-4.2.1"><code>Compress_d : x -&gt; round((2^d/q)*x) mod 2^d</code> (Equation 4.7)<a href="#section-3-4.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-4.3">
-          <p id="section-3-4.3.1"><code>Decompress_d : y -&gt; round((q/2d)*y)</code> (Equation 4.8)<a href="#section-3-4.3.1" class="pilcrow">¶</a></p>
+          <p id="section-3-4.3.1"><code>Decompress_d : y -&gt; round((q/2^d)*y)</code> (Equation 4.8)<a href="#section-3-4.3.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-4.4">
           <p id="section-3-4.4.1">remaining parameters <code>k</code>, <code>d_u</code>, <code>d_v</code>, etc. are defined by the respective ML-KEM parameter set -- this document writes <code>du</code> and <code>dv</code> in place of <code>d_u</code>, <code>d_v</code> in pseudocode<a href="#section-3-4.4.1" class="pilcrow">¶</a></p>
