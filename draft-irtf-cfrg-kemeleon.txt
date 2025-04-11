@@ -5,14 +5,14 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 27 September 2025                        University of Waterloo
+Expires: 13 October 2025                          University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                           26 March 2025
+                                                           11 April 2025
 
 
                            Kemeleon Encodings
-                      draft-veitch-kemeleon-latest
+                    draft-irtf-cfrg-kemeleon-latest
 
 Abstract
 
@@ -28,9 +28,9 @@ About This Document
    This note is to be removed before publishing as an RFC.
 
    The latest revision of this draft can be found at
-   https://ssveitch.github.io/draft-kemeleon/draft-veitch-kemeleon.html.
-   Status information for this document may be found at
-   https://datatracker.ietf.org/doc/draft-veitch-kemeleon/.
+   https://ssveitch.github.io/draft-kemeleon/draft-irtf-cfrg-
+   kemeleon.html.  Status information for this document may be found at
+   https://datatracker.ietf.org/doc/draft-irtf-cfrg-kemeleon/.
 
    Source for this draft and an issue tracker can be found at
    https://github.com/ssveitch/draft-kemeleon.
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 27 September 2025.
+   This Internet-Draft will expire on 13 October 2025.
 
 Copyright Notice
 
@@ -61,10 +61,7 @@ Copyright Notice
    Provisions Relating to IETF Documents (https://trustee.ietf.org/
    license-info) in effect on the date of publication of this document.
    Please review these documents carefully, as they describe your rights
-   and restrictions with respect to this document.  Code Components
-   extracted from this document must include Revised BSD License text as
-   described in Section 4.e of the Trust Legal Provisions and are
-   provided without warranty as described in the Revised BSD License.
+   and restrictions with respect to this document.
 
 Table of Contents
 
@@ -367,8 +364,8 @@ Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
 
 4.5.  Faster Arithmetic Variant
 
-   [OPEN ISSUE: Is the faster variant of interest?  If so, the following
-   can be extended with a complete description.]
+   OPEN ISSUE: Is the faster variant of interest?  If so, the following
+   can be extended with a complete description.
 
    Observing that q = 3329 = 13*2^8+1, a variant of Kemeleon with faster
    integer arithmetic can be specified.  First, the encoding rejects any
