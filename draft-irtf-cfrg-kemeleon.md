@@ -161,6 +161,7 @@ VectorDecode(r):
 ~~~
 
 The following algorithm samples an uncompressed pre-image of a coefficient `c` at random, where `u` is the decompressed value of `c`.
+It must take as input values of `u` that are output from `Decompress_d`.
 The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}).
 
 ~~~
@@ -168,6 +169,8 @@ SamplePreimage(d,u,c):
    if d == 10:
       if Compress_d(u + 2) == c:
          rand <--$ [-1,0,1,2]
+      else if Compress_d(u - 2) == c:
+         rand <--$ [-2,-1,0,1]
       else:
          rand <--$ [-1,0,1]
       return u + rand
@@ -180,14 +183,18 @@ SamplePreimage(d,u,c):
          rand = 0
       return u + rand
    if d == 5:
-      if c == 0:
+      if u == 0:
          rand <--$ [-52,...,52]
-      else:
+      else if u <= 1560:
          rand <--$ [-51,...,52]
+      else:
+         rand <--$ [-52,...,51]
       return u + rand
    if d == 4:
-      if c == 0:
+      if u == 0:
          rand <--$ [-104,...,104]
+      else if u <= 1456:
+         rand <--$ [-103,...,104]
       else:
          rand <--$ [-104,...,103]
       return u + rand
