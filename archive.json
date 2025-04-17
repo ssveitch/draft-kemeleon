@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-04-13T00:58:12.784460+00:00",
+  "timestamp": "2025-04-17T00:31:56.137961+00:00",
   "repo": "ssveitch/draft-kemeleon",
   "labels": [
     {
@@ -110,7 +110,47 @@
       "labels": [],
       "body": "Dan Harkins (27 Feb CFRG mailing list) suggested:\n\n> Some comments on the No Rejection Variant in section 4.4:\n> 1. There's a security parameter, t, used in encoding of the public key. The text mentions \"For example, t=128....\" implying it could be something else. But both sides have to agree on it and it seems like an unnecessary knob. Better to fix it based on the security level of the particular flavor of ML-KEM being used.So security level 1 has t=128, 3 has t=192, and 5 has t=256.\n> 2. when encoding the ciphertext, the vector being encoded is has (k+1)*n coefficients and the text says to use (k+1) when accumulating to a large integer. That means when I'm summing r I loop from 1 to (k+1)*n but does that also mean that all other occurrences of q^(k*n) should be q^((k+1)*n)? Like computing b and the range from which to choose m and the value multiplied by m? Is that all q^((k+1)*n)? And the (k+1) note also needs to be applied to the ciphertext decode function, Kemeleon.DecodeCtxtNR().\n> 3. The text has Kemeleon.DecodeCtxtNR() being called with \"ec\" but it should be \"r\".\n\nPoint 3. has been resolved.",
       "createdAt": "2025-03-01T11:07:02Z",
-      "updatedAt": "2025-03-01T11:07:02Z",
+      "updatedAt": "2025-04-16T12:58:15Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "marc-himmelberger",
+          "authorAssociation": "NONE",
+          "body": "To add to this,\n\nThe ciphertext sizes in Table 2 would also change for t != 128. They should be:\n* ML-KEM-512: 1140B\n* ML-KEM-768: 1522B\n* ML-KEM-1024: 1905B",
+          "createdAt": "2025-04-16T12:58:13Z",
+          "updatedAt": "2025-04-16T12:58:13Z"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "id": "I_kwDOM2GZlM6yylVf",
+      "title": "VectorDecodeNR typo",
+      "url": "https://github.com/ssveitch/draft-kemeleon/issues/6",
+      "state": "OPEN",
+      "author": "marc-himmelberger",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "VectorDecodeNR currently contains the code:\n```\nVectorDecodeNR(a):\n      a = a % q^(k*n)\n      for i from 1 to k*n:\n         a[i] = r % q\n         r = r // q\n      return a\n```\nThe argument should be the value r, the first line should be `r = r % q^(k*n)`",
+      "createdAt": "2025-04-16T13:06:44Z",
+      "updatedAt": "2025-04-16T13:06:44Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 7,
+      "id": "I_kwDOM2GZlM6yyoWT",
+      "title": "VectorEncodeNR clarification",
+      "url": "https://github.com/ssveitch/draft-kemeleon/issues/7",
+      "state": "OPEN",
+      "author": "marc-himmelberger",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "The value b is currently being calculated as:\n`b = log_2(q^(k*n))`\n\nI struggled to find explanations concerning the `log_2`, and think it might be helpful to mention:\n* `log_2` is the rounded-up binary logarithm\n* the logarithm is computed in the real numbers (i.e. substituting `log_2(q)=12` is invalid)\n* the computation does not require an exponentiation and can be done using floating point numbers\n\nI suggest replacing the line by `b = ceil(k*n*log2(q))`",
+      "createdAt": "2025-04-16T13:11:17Z",
+      "updatedAt": "2025-04-16T13:11:17Z",
       "closedAt": null,
       "comments": []
     }
