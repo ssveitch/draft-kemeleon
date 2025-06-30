@@ -261,18 +261,19 @@ Kemeleon.DecodeCtxt(ec):
 ## Non-Rejection Sampling Variant {#no-rejection}
 
 Applying a technique from {{ELL2}} (Section 3.4), the original `Kemeleon` construction can be adapted to avoid rejection sampling.
-This results in larger output sizes, but the encoding algorithm never fails.
+This results in larger output sizes (16 bytes for public keys, notably more for ciphertexts), but the encoding algorithm never fails.
+
 Applying the technique from {{ELL2}}, where `r` is the encoded vector before rejection occurs in `VectorEncode`, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = log_2(q^(k*n))` and `t` is a security parameter, and return `r + m*q^(k*n)`.
 This variant results in encoded values whose statistical distance from uniform is at most `2^-t`.
-This results in an increased output size of `t` bits, where `t` is the security parameter.
-For example, with `t=128`, this increases the output size by 16 bytes.
+Notably, this statistical distance is unconditional; we hence fix `t=128`.
+This results in the encoding size increasing by `t` bits, i.e., 16 bytes.
 
 For encapsulation key encodings, one can immediately replace `VectorEncode` and `VectorDecode` calls with calls to the following algorithms.
 
 ~~~
 VectorEncodeNR(a):
    r = 0
-   t = sec_param # e.g. t = 128, 256, ...
+   t = 128
    b = log_2(q^(k*n))
    for i from 1 to k*n:
       r += q^(i-1)*a[i]
