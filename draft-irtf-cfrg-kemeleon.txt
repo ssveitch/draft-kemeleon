@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 18 October 2025                          University of Waterloo
+Expires: 3 January 2026                           University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                           16 April 2025
+                                                             2 July 2025
 
 
                            Kemeleon Encodings
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 October 2025.
+   This Internet-Draft will expire on 3 January 2026.
 
 Copyright Notice
 
@@ -312,15 +312,17 @@ Table of Contents
 
    Applying a technique from [ELL2] (Section 3.4), the original Kemeleon
    construction can be adapted to avoid rejection sampling.  This
-   results in larger output sizes, but the encoding algorithm never
-   fails.  Applying the technique from [ELL2], where r is the encoded
-   vector before rejection occurs in VectorEncode, we then choose m at
-   random from [0,floor((2^(b+t)-r)/(q^(k*n)))], where b =
-   log_2(q^(k*n)) and t is a security parameter, and return r +
-   m*q^(k*n).  This variant results in encoded values whose statistical
-   distance from uniform is at most 2^-t.  This results in an increased
-   output size of t bits, where t is the security parameter.  For
-   example, with t=128, this increases the output size by 16 bytes.
+   results in larger output sizes (16 bytes for public keys, notably
+   more for ciphertexts), but the encoding algorithm never fails.
+
+   Applying the technique from [ELL2], where r is the encoded vector
+   before rejection occurs in VectorEncode, we then choose m at random
+   from [0,floor((2^(b+t)-r)/(q^(k*n)))], where b = log_2(q^(k*n)) and t
+   is a security parameter, and return r + m*q^(k*n).  This variant
+   results in encoded values whose statistical distance from uniform is
+   at most 2^-t.  Notably, this statistical distance is unconditional;
+   we hence fix t=128.  This results in the encoding size increasing by
+   t bits, i.e., 16 bytes.
 
    For encapsulation key encodings, one can immediately replace
    VectorEncode and VectorDecode calls with calls to the following
@@ -328,7 +330,7 @@ Table of Contents
 
    VectorEncodeNR(a):
       r = 0
-      t = sec_param # e.g. t = 128, 256, ...
+      t = 128
       b = log_2(q^(k*n))
       for i from 1 to k*n:
          r += q^(i-1)*a[i]
@@ -590,13 +592,13 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
 
    [CPACE]    Abdalla, M., Haase, B., and J. Hesse, "CPace, a balanced
               composable PAKE", Work in Progress, Internet-Draft, draft-
-              irtf-cfrg-cpace-13, 14 October 2024,
+              irtf-cfrg-cpace-14, 16 April 2025,
               <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
-              cpace-13>.
+              cpace-14>.
 
-   [ECDH-PSI] wangyuchen, Chang, Lu, Y., Hong, C., and J. Peng, "PSI
-              based on ECDH", Work in Progress, Internet-Draft, draft-
-              ecdh-psi-00, 21 October 2024,
+   [ECDH-PSI] Wang, Y., Chang, Lu, Y., Hong, C., and J. Peng, "PSI based
+              on ECDH", Work in Progress, Internet-Draft, draft-ecdh-
+              psi-00, 21 October 2024,
               <https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00>.
 
    [OBFS4]    "obfs4 (The obfourscator)", n.d.,
