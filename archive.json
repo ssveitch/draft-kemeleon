@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-07-01T00:40:06.861454+00:00",
+  "timestamp": "2025-07-03T00:35:05.986299+00:00",
   "repo": "ssveitch/draft-kemeleon",
   "labels": [
     {
@@ -210,24 +210,26 @@
       "id": "PR_kwDOM2GZlM6cpA0E",
       "title": "NR security parameter fixed to 128 bit",
       "url": "https://github.com/ssveitch/draft-kemeleon/pull/8",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "fxguenther",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "The security parameter `t' in the non-rejection variant yields _unconditional statistical distance_, hence it's sufficient to fix this to 128 bits.",
       "createdAt": "2025-06-30T07:14:31Z",
-      "updatedAt": "2025-06-30T07:14:31Z",
+      "updatedAt": "2025-07-02T09:38:58Z",
       "baseRepository": "ssveitch/draft-kemeleon",
       "baseRefName": "main",
       "baseRefOid": "bc674231b354719d383eb9fae4ddd99e15fc6ba6",
       "headRepository": "ssveitch/draft-kemeleon",
       "headRefName": "NR-secparam",
       "headRefOid": "2f11f7571f0ae5a25aff192f69186765e30678b1",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2025-07-02T09:38:35Z",
+      "mergedAt": "2025-07-02T09:38:35Z",
+      "mergedBy": "ssveitch",
+      "mergeCommit": {
+        "oid": "946644678b2a2dd633fd3baef7102f3f0a8f1e29"
+      },
       "comments": [],
       "reviews": []
     }
