@@ -1473,7 +1473,7 @@ Kemeleon.DecodeCtxt(ec):
         </h3>
 <p id="section-4.4-1">Applying a technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span> (Section 3.4), the original <code>Kemeleon</code> construction can be adapted to avoid rejection sampling.
 This results in larger output sizes (16 bytes for public keys, notably more for ciphertexts), but the encoding algorithm never fails.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
-<p id="section-4.4-2">Applying the technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span>, where <code>r</code> is the encoded vector before rejection occurs in <code>VectorEncode</code>, we then choose <code>m</code> at random from <code>[0,floor((2^(b+t)-r)/(q^(k*n)))]</code>, where <code>b = log_2(q^(k*n))</code> and <code>t</code> is a security parameter, and return <code>r + m*q^(k*n)</code>.
+<p id="section-4.4-2">Applying the technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span>, where <code>r</code> is the encoded vector before rejection occurs in <code>VectorEncode</code>, we then choose <code>m</code> at random from <code>[0,floor((2^(b+t)-r)/(q^(k*n)))]</code>, where <code>b = ceil(k*n*log2(q))</code> and <code>t</code> is a security parameter, and return <code>r + m*q^(k*n)</code>.
 This variant results in encoded values whose statistical distance from uniform is at most <code>2^-t</code>.
 Notably, this statistical distance is unconditional; we hence fix <code>t=128</code>.
 This results in the encoding size increasing by <code>t</code> bits, i.e., 16 bytes.<a href="#section-4.4-2" class="pilcrow">¶</a></p>
@@ -1483,7 +1483,7 @@ This results in the encoding size increasing by <code>t</code> bits, i.e., 16 by
 VectorEncodeNR(a,k):
    r = 0
    t = 128
-   b = log_2(q^(k*n))
+   b = ceil(k*n*log2(q))
    for i from 1 to k*n:
       r += q^(i-1)*a[i]
    m &lt;--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
