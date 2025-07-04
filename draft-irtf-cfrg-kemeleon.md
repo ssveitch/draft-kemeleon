@@ -95,8 +95,7 @@ For example, applications using Elligator include protocols used for censorship 
 For the post-quantum transition, an analogous encoding for (ML-)KEM encapsulation keys and ciphertexts to random bytestrings is required.
 This document specifies such an encoding, Kemeleon, for ML-KEM encapsulation keys and ciphertexts.
 Kemeleon was introduced in {{GSV24}} for building an (post-quantum) "obfuscated" KEM whose encapsulation keys and ciphertexts are indistinguishable from random.
-Beyond the original construction, this document additionally specifies variants that avoid the encoding failing or the use of large integer computations, or allow for a deterministic encoding.
-Aside from these variants, it is notable that the Kemeleon encodings of encapsulation keys results in smaller representations than in the original ML-KEM specification.
+Different than the original construction, this document specifies an encoding that avoids any failure probability in the encoding and allows for a deterministic encoding.
 
 # Conventions and Definitions {#conventions}
 
@@ -124,7 +123,6 @@ Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where
 
 The following terms and notation are used throughout this document:
 
-- `msb(x)` refers to the most significant bit of the value x
 - `a[i]` denotes the `i`th position of a vector `a` of coefficients
 - `concat(x0, ..., xN)`: returns the concatenation of bytestrings.
 
@@ -139,21 +137,27 @@ At a high level, the constructions in this document instantiate the following fu
 
 ## Common Functions {#common-func}
 
-The following function maps a vector of k*n coefficients modulo q to a large integer, rejecting if the most significant bit of the integer is 1.
+The following function maps a vector k*n of coefficients modulo q to a large integer.
+Applying the technique from {{ELL2}}, where `r` is the large integer resulting from accumulating coefficients, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = ceil(k*n*log2(q))` and `t` is a security parameter, and return `r + m*q^(k*n)`.
+Notably, the random value `m` need not be transmitted alongside the encoded values.
+This results in encoded values whose statistical distance from uniform is at most `2^-t`.
+Notably, this statistical distance is unconditional; we hence fix `t=128`.
+This results in the encoding size increasing by `t` bits, i.e., 16 bytes.
 
 ~~~
-VectorEncode(a):
+VectorEncode(a,k):
    r = 0
+   t = 128
+   b = ceil(k*n*log2(q))
    for i from 1 to k*n:
       r += q^(i-1)*a[i]
-   if msb(r) == 1:
-      return err
-   else:
-      return r
+   m <--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
+   return r + m*q^(k*n)
 ~~~
 
 ~~~
-VectorDecode(r):
+VectorDecode(r,k):
+   r = r % q^(k*n)
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
@@ -211,7 +215,7 @@ This is already a random 32-byte string, so it is returned alongside the encoded
 
 ~~~
 Kemeleon.EncodePk(ek = (t, rho)):
-   r = VectorEncode(t)
+   r = VectorEncode(t,k)
    if r == err:
       return err
    else:
@@ -221,12 +225,9 @@ Kemeleon.EncodePk(ek = (t, rho)):
 ~~~
 Kemeleon.DecodePk(eek):
    r,rho = eek # rho is fixed length
-   t = VectorDecode(r)
+   t = VectorDecode(r,k)
    return (t, rho)
 ~~~
-
-While the encapsulation key encoding algorithm has some failure probability, the decoding algorithm can never fail.
-Otherwise, a failure in decoding would provide a distinguishing factor between Kemeleon-encoded values and random bitstrings.
 
 ## Encoding Ciphertexts {#ctxt-encoding}
 
@@ -234,70 +235,9 @@ ML-KEM ciphertexts consist of two components: `c_1`, a vector of `k` polynomials
 The coefficients of these polynomials are not uniformly distributed, as a result of the compression step in encapsulation.
 The following encoding function decompresses and recovers a random preimage of this compression step in order to recover the uniform distribution of coefficients.
 Then, the same vector encoding step used for encapsulation keys is applied.
-For the second ciphertext component, rejection sampling is performed to retain uniformity, rather than decompressing.
 
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
-   u = Decompress_du(c_1)
-   for i from 1 to k*n:
-      u[i] = SamplePreimage(du,u[i],c_1[i])
-   r = VectorEncode(u)
-   if r == err:
-      return err
-   for i from 1 to n:
-      if c_2[1] == 0:
-         return err with prob. 1/ceil(q/(2^dv))
-   return concat(r,c_2)
-~~~
-
-~~~
-Kemeleon.DecodeCtxt(ec):
-   r,c_2 = ec # c_2 is fixed length
-   u = VectorDecode(r)
-   c_1 = Compress_du(u)
-   return (c_1,c_2)
-~~~
-
-## Non-Rejection Sampling Variant {#no-rejection}
-
-Applying a technique from {{ELL2}} (Section 3.4), the original `Kemeleon` construction can be adapted to avoid rejection sampling.
-This results in larger output sizes (16 bytes for public keys, notably more for ciphertexts), but the encoding algorithm never fails.
-
-Applying the technique from {{ELL2}}, where `r` is the encoded vector before rejection occurs in `VectorEncode`, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = ceil(k*n*log2(q))` and `t` is a security parameter, and return `r + m*q^(k*n)`.
-This variant results in encoded values whose statistical distance from uniform is at most `2^-t`.
-Notably, this statistical distance is unconditional; we hence fix `t=128`.
-This results in the encoding size increasing by `t` bits, i.e., 16 bytes.
-
-For encapsulation key encodings, one can immediately replace `VectorEncode` and `VectorDecode` calls with calls to the following algorithms, where `k` is as defined by the appropriate ML-KEM parameter set.
-
-~~~
-VectorEncodeNR(a,k):
-   r = 0
-   t = 128
-   b = ceil(k*n*log2(q))
-   for i from 1 to k*n:
-      r += q^(i-1)*a[i]
-   m <--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
-   return r + m*q^(k*n)
-~~~
-
-~~~
-VectorDecodeNR(r,k):
-   r = r % q^(k*n)
-   for i from 1 to k*n:
-      a[i] = r % q
-      r = r // q
-   return a
-~~~
-
-Notably, the random value `m` need not be transmitted alongside the encoded values.
-
-For ciphertext encodings, one must also avoid rejection sampling based on coefficients of the second component of the ciphertext.
-Therefore, the new ciphertext encoding must decompress and `VectorEncodeNR` the second component of the ciphertext.
-This more significantly increases the size of the encoded ciphertext.
-
-~~~
-Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
@@ -305,54 +245,27 @@ Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
    for i from 1 to n:
       v[i] = SamplePreimage(dv,v[i],c_2[i])
    w = [u,v] # treat u,v as a singular vector of (k+1)*n coefficients
-   r = VectorEncodeNR(w,k+1)
+   r = VectorEncode(w,k+1)
    return r
 ~~~
 
 ~~~
-Kemeleon.DecodeCtxtNR(r):
-   w = VectorDecodeNR(r,k+1)
+Kemeleon.DecodeCtxt(r):
+   w = VectorDecode(r,k+1)
    u,v = w # u, v are fixed length
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
    return (c_1,c_2)
 ~~~
 
-## Faster Arithmetic Variant {#faster}
-
-OPEN ISSUE: Is the faster variant of interest? If so, the following can be extended with a complete description.
-
-Observing that `q = 3329 = 13*2^8+1`, a variant of `Kemeleon` with faster integer arithmetic can be specified.
-First, the encoding rejects any polynomial with a coefficient equal to `q-1 = 3328`.
-This ensures that all arithmetic can be computed with values modulo `q-1 = 13*2^8`.
-Then, note that rather than accumulating values to a large integer mod `q^(k*n)`, it is only required to accumulate values to an integer mod `13^(k*n)`, while keeping track of the 8 lower order bits of each coefficient.
-The output size of the encoding does not change, but this results in an increased rejection rate.
-
-In particular, {{fast-succ-prob}} gives success probabilities for encapsulation key and ciphertext encodings:
-
-| Parameter     | ek success probability | ctxt success probability |
-| :------------ | ---------------------: |  ----------------------: |
-| ML-KEM-512    |                  0.49  |                     0.45 |
-| ML-KEM-768    |                  0.29  |                     0.25 |
-| ML-KEM-1024   |                  0.53  |                     0.47 |
-{: #fast-succ-prob title="Success probabilities for faster Kemeleon encoding"}
-
-## Summary of Encodings {#comparison}
+## Summary of Properties {#properties}
 
 | Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations |
 | :----------------------- | -------------------: | -------------------: | ------------------------: |
-| Kemeleon - ML-KEM512     | ek: 781, ctxt: 877   | ek: 0.56, ctxt: 0.51 | Large int (750B) arithmetic |
-| Kemeleon - ML-KEM768     | ek: 1156, ctxt: 1252 | ek: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
-| Kemeleon - ML-KEM1024    | ek: 1530, ctxt: 1658 | ek: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
-| :----------------------- | -------------------: | -------------------: | ------------------------: |
-| KemeleonNR - ML-KEM512   | ek: 797, ctxt: 1140  | ek: 1.00, ctxt: 1.00 | Large int (1123B) arithmetic |
-| KemeleonNR - ML-KEM768   | ek: 1172, ctxt: 1514 | ek: 1.00, ctxt: 1.00 | Large int (1498B) arithmetic |
-| KemeleonNR - ML-KEM1024  | ek: 1546, ctxt: 1889 | ek: 1.00, ctxt: 1.00 | Large int (1872B) arithmetic |
-| :----------------------- | -------------------: | -------------------: | ------------------------: |
-| KemeleonFT - ML-KEM512   | ek: 781, ctxt: 877   | ek: 0.49, ctxt: 0.45 | Smaller int (235B) arithmetic |
-| KemeleonFT - ML-KEM768   | ek: 1156, ctxt: 1252 | ek: 0.29, ctxt: 0.25 | Smaller int (355B) arithmetic |
-| KemeleonFT - ML-KEM1024  | ek: 1530, ctxt: 1658 | ek: 0.53, ctxt: 0.47 | Smaller int (475B) arithmetic |
-{: #summary-encoding title="Summary of Kemeleon Variants, NR = No Reject, FT = Faster"}
+| Kemeleon - ML-KEM512   | ek: 797, ctxt: 1140  | ek: 1.00, ctxt: 1.00 | Large int (1123B) arithmetic |
+| Kemeleon - ML-KEM768   | ek: 1172, ctxt: 1514 | ek: 1.00, ctxt: 1.00 | Large int (1498B) arithmetic |
+| Kemeleon - ML-KEM1024  | ek: 1546, ctxt: 1889 | ek: 1.00, ctxt: 1.00 | Large int (1872B) arithmetic |
+{: #summary-encoding title="Summary of Kemeleon Properties"}
 
 # Additional Considerations for Applications {#considerations}
 
@@ -387,7 +300,7 @@ In this case, the Kemeleon encoding algorithm for ciphertexts would omit the `De
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    w = [c_1,c_2] # treat c_1,c_2 as a singular vector of (k+1)*n coefficients
-   r = VectorEncode(w) # this call should use k+1 in all instances of k when accumulating to a large integer in VectorEncode
+   r = VectorEncode(w,k+1)
    return r
 ~~~
 
@@ -395,12 +308,10 @@ Decoding is adapted analogously.
 
 ~~~
 Kemeleon.DecodeCtxt(ec):
-   w = VectorDecode(r) # this call should use k+1 in all instances of k in VectorDecode
+   w = VectorDecode(r,k+1)
    c_1,c_2 = w # c_1, c_2 are fixed length
    return (c_1,c_2)
 ~~~
-
-Naturally, these algorithms can use `VectorEncodeNR`, `VectorDecodeNR`, if the non-rejecting variant is desirable.
 
 # Security Considerations {#security}
 
