@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 3 January 2026                           University of Waterloo
+Expires: 5 January 2026                           University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                             2 July 2025
+                                                             4 July 2025
 
 
                            Kemeleon Encodings
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 January 2026.
+   This Internet-Draft will expire on 5 January 2026.
 
 Copyright Notice
 
@@ -326,9 +326,10 @@ Table of Contents
 
    For encapsulation key encodings, one can immediately replace
    VectorEncode and VectorDecode calls with calls to the following
-   algorithms.
+   algorithms, where k is as defined by the appropriate ML-KEM parameter
+   set.
 
-   VectorEncodeNR(a):
+   VectorEncodeNR(a,k):
       r = 0
       t = 128
       b = log_2(q^(k*n))
@@ -337,7 +338,7 @@ Table of Contents
       m <--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
       return r + m*q^(k*n)
 
-   VectorDecodeNR(a):
+   VectorDecodeNR(a,k):
       a = a % q^(k*n)
       for i from 1 to k*n:
          a[i] = r % q
@@ -353,19 +354,19 @@ Table of Contents
    VectorEncodeNR the second component of the ciphertext.  This more
    significantly increases the size of the encoded ciphertext.
 
-Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
-   u = Decompress_du(c_1)
-   for i from 1 to k*n:
-      u[i] = SamplePreimage(du,u[i],c_1[i])
-   v = Decompress_dv(c_2)
-   for i from 1 to n:
-      v[i] = SamplePreimage(dv,v[i],c_2[i])
-   w = [u,v] # treat u,v as a singular vector of (k+1)*n coefficients
-   r = VectorEncodeNR(w) # this call should use k+1 rather than k when accumulating to a large integer
-   return r
+   Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
+      u = Decompress_du(c_1)
+      for i from 1 to k*n:
+         u[i] = SamplePreimage(du,u[i],c_1[i])
+      v = Decompress_dv(c_2)
+      for i from 1 to n:
+         v[i] = SamplePreimage(dv,v[i],c_2[i])
+      w = [u,v] # treat u,v as a singular vector of (k+1)*n coefficients
+      r = VectorEncodeNR(w,k+1)
+      return r
 
    Kemeleon.DecodeCtxtNR(r):
-      w = VectorDecodeNR(r)
+      w = VectorDecodeNR(r,k+1)
       u,v = w # u, v are fixed length
       c_1 = Compress_du(u)
       c_2 = Compress_dv(v)
