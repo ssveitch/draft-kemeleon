@@ -502,15 +502,15 @@ Table of Contents
 
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    w = [c_1,c_2] # treat c_1,c_2 as a singular vector of (k+1)*n coefficients
-   r = VectorEncode(w) # this call should use k+1 rather than k when accumulating to a large integer
+   r = VectorEncode(w) # this call should use k+1 in all instances of k when accumulating to a large integer in VectorEncode
    return r
 
    Decoding is adapted analogously.
 
-   Kemeleon.DecodeCtxt(ec):
-      w = VectorDecode(r)
-      c_1,c_2 = w # c_1, c_2 are fixed length
-      return (c_1,c_2)
+Kemeleon.DecodeCtxt(ec):
+   w = VectorDecode(r) # this call should use k+1 in all instances of k in VectorDecode
+   c_1,c_2 = w # c_1, c_2 are fixed length
+   return (c_1,c_2)
 
    Naturally, these algorithms can use VectorEncodeNR, VectorDecodeNR,
    if the non-rejecting variant is desirable.
