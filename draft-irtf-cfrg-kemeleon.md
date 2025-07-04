@@ -268,10 +268,10 @@ This variant results in encoded values whose statistical distance from uniform i
 Notably, this statistical distance is unconditional; we hence fix `t=128`.
 This results in the encoding size increasing by `t` bits, i.e., 16 bytes.
 
-For encapsulation key encodings, one can immediately replace `VectorEncode` and `VectorDecode` calls with calls to the following algorithms.
+For encapsulation key encodings, one can immediately replace `VectorEncode` and `VectorDecode` calls with calls to the following algorithms, where `k` is as defined by the appropriate ML-KEM parameter set.
 
 ~~~
-VectorEncodeNR(a):
+VectorEncodeNR(a,k):
    r = 0
    t = 128
    b = log_2(q^(k*n))
@@ -282,7 +282,7 @@ VectorEncodeNR(a):
 ~~~
 
 ~~~
-VectorDecodeNR(a):
+VectorDecodeNR(a,k):
    a = a % q^(k*n)
    for i from 1 to k*n:
       a[i] = r % q
@@ -305,13 +305,13 @@ Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
    for i from 1 to n:
       v[i] = SamplePreimage(dv,v[i],c_2[i])
    w = [u,v] # treat u,v as a singular vector of (k+1)*n coefficients
-   r = VectorEncodeNR(w) # this call should use k+1 rather than k when accumulating to a large integer
+   r = VectorEncodeNR(w,k+1)
    return r
 ~~~
 
 ~~~
 Kemeleon.DecodeCtxtNR(r):
-   w = VectorDecodeNR(r)
+   w = VectorDecodeNR(r,k+1)
    u,v = w # u, v are fixed length
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
