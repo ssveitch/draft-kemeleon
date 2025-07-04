@@ -338,8 +338,8 @@ Table of Contents
       m <--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
       return r + m*q^(k*n)
 
-   VectorDecodeNR(a,k):
-      a = a % q^(k*n)
+   VectorDecodeNR(r,k):
+      r = r % q^(k*n)
       for i from 1 to k*n:
          a[i] = r % q
          r = r // q
