@@ -387,7 +387,7 @@ In this case, the Kemeleon encoding algorithm for ciphertexts would omit the `De
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    w = [c_1,c_2] # treat c_1,c_2 as a singular vector of (k+1)*n coefficients
-   r = VectorEncode(w) # this call should use k+1 rather than k when accumulating to a large integer
+   r = VectorEncode(w) # this call should use k+1 in all instances of k when accumulating to a large integer in VectorEncode
    return r
 ~~~
 
@@ -395,7 +395,7 @@ Decoding is adapted analogously.
 
 ~~~
 Kemeleon.DecodeCtxt(ec):
-   w = VectorDecode(r)
+   w = VectorDecode(r) # this call should use k+1 in all instances of k in VectorDecode
    c_1,c_2 = w # c_1, c_2 are fixed length
    return (c_1,c_2)
 ~~~
