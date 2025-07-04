@@ -282,8 +282,8 @@ VectorEncodeNR(a,k):
 ~~~
 
 ~~~
-VectorDecodeNR(a,k):
-   a = a % q^(k*n)
+VectorDecodeNR(r,k):
+   r = r % q^(k*n)
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
