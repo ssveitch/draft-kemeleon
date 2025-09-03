@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 5 January 2026                           University of Waterloo
+Expires: 7 March 2026                             University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                             4 July 2025
+                                                        3 September 2025
 
 
                            Kemeleon Encodings
@@ -50,7 +50,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 January 2026.
+   This Internet-Draft will expire on 7 March 2026.
 
 Copyright Notice
 
@@ -74,9 +74,10 @@ Table of Contents
      4.3.  Encoding Ciphertexts
      4.4.  Summary of Properties
    5.  Additional Considerations for Applications
-     5.1.  Deterministic Encoding
-     5.2.  Relation to Hash-to-Curve
-     5.3.  Modifying ML-KEM Algorithms
+     5.1.  Smaller Ciphertexts
+     5.2.  Deterministic Encoding
+     5.3.  Relation to Hash-to-Curve
+     5.4.  Modifying ML-KEM Algorithms
    6.  Security Considerations
      6.1.  Computational Assumptions
      6.2.  Randomness Sampling
@@ -106,9 +107,8 @@ Table of Contents
    encapsulation keys and ciphertexts.  Kemeleon was introduced in
    [GSV24] for building an (post-quantum) "obfuscated" KEM whose
    encapsulation keys and ciphertexts are indistinguishable from random.
-   Different than the original construction, this document specifies an
-   encoding that avoids any failure probability in the encoding and
-   allows for a deterministic encoding.
+   This document specifies a version of the Kemeleon encoding that
+   avoids any failure probability.
 
 2.  Conventions and Definitions
 
@@ -263,10 +263,7 @@ Table of Contents
 
    Kemeleon.EncodePk(ek = (t, rho)):
       r = VectorEncode(t,k)
-      if r == err:
-         return err
-      else:
-         return concat(r,rho)
+      return concat(r,rho)
 
    Kemeleon.DecodePk(eek):
       r,rho = eek # rho is fixed length
@@ -325,7 +322,55 @@ Table of Contents
    This section contains additional considerations and comments related
    to using Kemeleon encodings in different applications.
 
-5.1.  Deterministic Encoding
+5.1.  Smaller Ciphertexts
+
+   In applications willing to incur some probability of failure in
+   encoding, a variant of the encoding algorithm that does not add the
+   additional m value can be used.  This results in smaller output sizes
+   for public keys and ciphertexts.  In particular, the following
+   algorithms can be used instead of VectorEncode and VectorDecode
+   above.
+
+   VectorEncode(a,k):
+      r = 0
+      for i from 1 to k*n:
+         r += q^(i-1)*a[i]
+      if msb(r) == 1:
+         return err
+      else:
+         return r
+
+   VectorDecode(r,k):
+      for i from 1 to k*n:
+         a[i] = r % q
+         r = r // q
+      return a
+
+   The encoding algorithms for public keys should handle errors
+   accordingly, returning an error if VectorEncode returns an error.
+   For ciphertexts, the second ciphertext component need not be
+   decompressed, and rejection sampling can be used to retain uniformity
+   instead.
+
+   Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+      u = Decompress_du(c_1)
+      for i from 1 to k*n:
+         u[i] = SamplePreimage(du,u[i],c_1[i])
+      r = VectorEncode(u)
+      if r == err:
+         return err
+      for i from 1 to n:
+         if c_2[1] == 0:
+            return err with prob. 1/ceil(q/(2^dv))
+      return concat(r,c_2)
+
+   Kemeleon.DecodeCtxt(ec):
+      r,c_2 = ec # c_2 is fixed length
+      u = VectorDecode(r)
+      c_1 = Compress_du(u)
+      return (c_1,c_2)
+
+5.2.  Deterministic Encoding
 
    The randomness used in Kemeleon ciphertext encodings MAY be derived
    in a deterministic manner.  To do so, following a call to Encap which
@@ -354,7 +399,7 @@ Table of Contents
    needed.  See Section 6.2 for relevant discussion on keeping this
    randomness secret.
 
-5.2.  Relation to Hash-to-Curve
+5.3.  Relation to Hash-to-Curve
 
    While the functionality of Kemeleon is similar to hash-to-curve
    [RFC9380] (mapping arbitrary byte strings to public keys/
@@ -365,7 +410,7 @@ Table of Contents
    how to continue working with the element in the same way that can be
    done with an elliptic curve point.
 
-5.3.  Modifying ML-KEM Algorithms
+5.4.  Modifying ML-KEM Algorithms
 
    In applications that _only_ require Kemeleon-encoded values _and_
    where the underlying ML-KEM implementation can be modified, the
@@ -426,12 +471,11 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
 6.3.  Timing Side-Channels
 
    Beyond timing side-channel considerations for ML-KEM itself, care
-   should be taken when using Kemeleon encodings, in particular those
-   with a non-zero failure probability.  Rejecting and re-generating
-   encapsulation keys or ciphertexts may leak information about the use
-   of Kemeleon encodings, as might the overhead of the encoding itself.
-   Additionally, the algorithms required to perform big integer
-   arithmetic may leak information via timing.
+   should be taken when using Kemeleon encodings.  Algorithms required
+   to perform large integer arithmetic may leak information via timing.
+   Additionally, rejecting and re-generating encapsulation keys or
+   ciphertexts may leak information about the use of Kemeleon encodings,
+   as might the overhead of the encoding itself.
 
 7.  IANA Considerations
 
@@ -475,9 +519,9 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
               <https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-
               cpace-14>.
 
-   [ECDH-PSI] Wang, Y., Chang, Lu, Y., Hong, C., and J. Peng, "PSI based
-              on ECDH", Work in Progress, Internet-Draft, draft-ecdh-
-              psi-00, 21 October 2024,
+   [ECDH-PSI] Wang, Y., ChangWenting, Lu, Y., Hong, C., and J. Peng,
+              "PSI based on ECDH", Work in Progress, Internet-Draft,
+              draft-ecdh-psi-00, 21 October 2024,
               <https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00>.
 
    [OBFS4]    "obfs4 (The obfourscator)", n.d.,
