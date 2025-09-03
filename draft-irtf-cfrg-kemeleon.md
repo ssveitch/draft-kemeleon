@@ -95,7 +95,7 @@ For example, applications using Elligator include protocols used for censorship 
 For the post-quantum transition, an analogous encoding for (ML-)KEM encapsulation keys and ciphertexts to random bytestrings is required.
 This document specifies such an encoding, Kemeleon, for ML-KEM encapsulation keys and ciphertexts.
 Kemeleon was introduced in {{GSV24}} for building an (post-quantum) "obfuscated" KEM whose encapsulation keys and ciphertexts are indistinguishable from random.
-Different than the original construction, this document specifies an encoding that avoids any failure probability in the encoding and allows for a deterministic encoding.
+This document specifies a version of the Kemeleon encoding that avoids any failure probability.
 
 # Conventions and Definitions {#conventions}
 
@@ -216,10 +216,7 @@ This is already a random 32-byte string, so it is returned alongside the encoded
 ~~~
 Kemeleon.EncodePk(ek = (t, rho)):
    r = VectorEncode(t,k)
-   if r == err:
-      return err
-   else:
-      return concat(r,rho)
+   return concat(r,rho)
 ~~~
 
 ~~~
@@ -270,6 +267,56 @@ Kemeleon.DecodeCtxt(r):
 # Additional Considerations for Applications {#considerations}
 
 This section contains additional considerations and comments related to using Kemeleon encodings in different applications.
+
+## Smaller Ciphertexts {#compressonly}
+
+In applications willing to incur some probability of failure in encoding, a variant of the encoding algorithm that does not add the additional `m` value can be used.
+This results in smaller output sizes for public keys and ciphertexts. In particular, the following algorithms can be used instead of `VectorEncode` and `VectorDecode` above.
+
+~~~
+VectorEncode(a,k):
+   r = 0
+   for i from 1 to k*n:
+      r += q^(i-1)*a[i]
+   if msb(r) == 1:
+      return err
+   else:
+      return r
+~~~
+
+~~~
+VectorDecode(r,k):
+   for i from 1 to k*n:
+      a[i] = r % q
+      r = r // q
+   return a
+~~~
+
+The encoding algorithms for public keys should handle errors accordingly, returning an error if `VectorEncode` returns an error.
+For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.
+
+~~~
+Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+   u = Decompress_du(c_1)
+   for i from 1 to k*n:
+      u[i] = SamplePreimage(du,u[i],c_1[i])
+   r = VectorEncode(u)
+   if r == err:
+      return err
+   for i from 1 to n:
+      if c_2[1] == 0:
+         return err with prob. 1/ceil(q/(2^dv))
+   return concat(r,c_2)
+~~~
+
+~~~
+Kemeleon.DecodeCtxt(ec):
+   r,c_2 = ec # c_2 is fixed length
+   u = VectorDecode(r)
+   c_1 = Compress_du(u)
+   return (c_1,c_2)
+~~~
+
 
 ## Deterministic Encoding {#deterministic}
 
@@ -330,9 +377,9 @@ In particular, public randomness enables distinguishing a Kemeleon-encoded value
 Decoding the value in question and re-encoding it with the public randomness will yield the original value if it was Kemeleon-encoded.
 
 ## Timing Side-Channels {#timing-security}
-Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings, in particular those with a non-zero failure probability.
-Rejecting and re-generating encapsulation keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.
-Additionally, the algorithms required to perform big integer arithmetic may leak information via timing.
+Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings.
+Algorithms required to perform large integer arithmetic may leak information via timing.
+Additionally, rejecting and re-generating encapsulation keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.
 
 # IANA Considerations
 
