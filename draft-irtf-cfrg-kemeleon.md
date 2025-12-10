@@ -130,35 +130,35 @@ The following terms and notation are used throughout this document:
 
 At a high level, the constructions in this document instantiate the following functions:
 
-- `EncodePk(ek) -> eek` is the (possibly randomized) encoding algorithm that on input an encapsulation key, outputs an obfuscated encapsulation key or an error.
-- `DecodePk(eek) -> ek` is the deterministic decoding algorithm that on input an obfuscated encapsulation key, outputs an encapsulation key.
+- `EncodeEk(ek) -> eek` is the (possibly randomized) encoding algorithm that on input an encapsulation key, outputs an obfuscated encapsulation key or an error.
+- `DecodeEk(eek) -> ek` is the deterministic decoding algorithm that on input an obfuscated encapsulation key, outputs an encapsulation key.
 - `EncodeCtxt(c) -> ec` is the (possibly randomized) encoding algorithm that on input a ciphertext, outputs an obfuscated ciphertext or an error.
 - `DecodeCtxt(ec) -> c` is the deterministic decoding algorithm that on input an obfuscated ciphertext, outputs a ciphertext.
 
 ## Common Functions {#common-func}
 
-The following function maps a vector k*n of coefficients modulo q to a large integer.
-Applying the technique from {{ELL2}}, where `r` is the large integer resulting from accumulating coefficients, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^(k*n)))]`, where `b = ceil(k*n*log2(q))` and `t` is a security parameter, and return `r + m*q^(k*n)`.
+The following function maps a vector of length `n` of coefficients modulo `q` to a large integer.
+Applying the technique from {{ELL2}}, where `r` is the large integer resulting from accumulating coefficients, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^n))]`, where `b = ceil(n*log2(q))` and `t` is a security parameter, and return `r + m*q^(n)`.
 Notably, the random value `m` need not be transmitted alongside the encoded values.
 This results in encoded values whose statistical distance from uniform is at most `2^-t`.
 Notably, this statistical distance is unconditional; we hence fix `t=128`.
 This results in the encoding size increasing by `t` bits, i.e., 16 bytes.
 
 ~~~
-VectorEncode(a,k):
+VectorEncode(a):
    r = 0
    t = 128
-   b = ceil(k*n*log2(q))
-   for i from 1 to k*n:
+   b = ceil(n*log2(q))
+   for i from 1 to n:
       r += q^(i-1)*a[i]
-   m <--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
-   return r + m*q^(k*n)
+   m <--$ [0,...,floor((2^(b+t)-r)/(q^(n)))]
+   return r + m*q^n
 ~~~
 
 ~~~
-VectorDecode(r,k):
-   r = r % q^(k*n)
-   for i from 1 to k*n:
+VectorDecode(r):
+   r = r % q^n
+   for i from 1 to n:
       a[i] = r % q
       r = r // q
    return a
@@ -211,18 +211,25 @@ SamplePreimage(d,u,c):
 The following algorithms encode ML-KEM encapsulation keys as random bytestrings.
 `rho` is the public seed used to generate the public matrix `A` {{FIPS203}}.
 This is already a random 32-byte string, so it is returned alongside the encoded value of `t`.
-`t` is a vector of `k` polynomials with `n` coefficients, but in the following pseudocode `t` is treated as a vector of `k*n` coefficients.
+`t` is a vector of `k` polynomials with `n` coefficients.
+We treat each polynomial in `t` as a vector of `n` coefficient, for which we apply `VectorEncode`.
+From this, we obtain `k` values that are then concatenated.
 
 ~~~
-Kemeleon.EncodePk(ek = (t, rho)):
-   r = VectorEncode(t,k)
+Kemeleon.EncodeEk(ek = (t, rho)):
+   for i in range(k):
+      r_i = VectorEncode(t[i])
+   r = concat(r_1,...,r_k)
    return concat(r,rho)
 ~~~
 
 ~~~
-Kemeleon.DecodePk(eek):
-   r,rho = eek # rho is fixed length
-   t = VectorDecode(r,k)
+Kemeleon.DecodeEk(eek):
+   r_1,..,r_k,rho = eek # rho and each r_i is fixed length
+   t = []
+   for i in range(k):
+      t_i = VectorDecode(r_i)
+      t.append(t_i)
    return (t, rho)
 ~~~
 
@@ -231,7 +238,7 @@ Kemeleon.DecodePk(eek):
 ML-KEM ciphertexts consist of two components: `c_1`, a vector of `k` polynomials with `n` coefficients mod `2^du`, and `c_2`, a polynomial with `n` coefficients mod `2^dv`.
 The coefficients of these polynomials are not uniformly distributed, as a result of the compression step in encapsulation.
 The following encoding function decompresses and recovers a random preimage of this compression step in order to recover the uniform distribution of coefficients.
-Then, the same vector encoding step used for encapsulation keys is applied.
+Then, the same vector encoding step used for encapsulation keys can be applied.
 
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
@@ -241,15 +248,19 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    v = Decompress_dv(c_2)
    for i from 1 to n:
       v[i] = SamplePreimage(dv,v[i],c_2[i])
-   w = [u,v] # treat u,v as a singular vector of (k+1)*n coefficients
-   r = VectorEncode(w,k+1)
+   for i in range(k)
+      r_i = VectorEncode(u[i])
+   r_(k+1) = VectorEncode(v)
+   r = concat(r_0,...,r_(k+1))
    return r
 ~~~
 
 ~~~
 Kemeleon.DecodeCtxt(r):
-   w = VectorDecode(r,k+1)
-   u,v = w # u, v are fixed length
+   r_0,...,r_(k+1) = r # each r_i is fixed length
+   for i in range(k):
+      u[i] = VectorDecode(r_i)
+   v = VectorDecode(r_(k+1))
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
    return (c_1,c_2)
@@ -257,21 +268,24 @@ Kemeleon.DecodeCtxt(r):
 
 ## Summary of Properties {#properties}
 
-| Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations |
-| :----------------------- | -------------------: | -------------------: | ------------------------: |
-| Kemeleon - ML-KEM512   | ek: 797, ctxt: 1140  | ek: 1.00, ctxt: 1.00 | Large int (1123B) arithmetic |
-| Kemeleon - ML-KEM768   | ek: 1172, ctxt: 1514 | ek: 1.00, ctxt: 1.00 | Large int (1498B) arithmetic |
-| Kemeleon - ML-KEM1024  | ek: 1546, ctxt: 1889 | ek: 1.00, ctxt: 1.00 | Large int (1872B) arithmetic |
+| Algorithm / Parameter    | Output size (bytes)  | Success probability  | 
+| :----------------------- | -------------------: | -------------------: | 
+| Kemeleon - ML-KEM512   | ek: 814, ctxt: 1172  | ek: 1.00, ctxt: 1.00 |
+| Kemeleon - ML-KEM768   | ek: 1204, ctxt: 1562 | ek: 1.00, ctxt: 1.00 |
+| Kemeleon - ML-KEM1024  | ek: 1594, ctxt: 1953 | ek: 1.00, ctxt: 1.00 |
 {: #summary-encoding title="Summary of Kemeleon Properties"}
 
 # Additional Considerations for Applications {#considerations}
 
 This section contains additional considerations and comments related to using Kemeleon encodings in different applications.
 
-## Smaller Ciphertexts {#compressonly}
+## Smaller Outputs from Rejection Sampling {#compressonly}
 
 In applications willing to incur some probability of failure in encoding, a variant of the encoding algorithm that does not add the additional `m` value can be used.
-This results in smaller output sizes for public keys and ciphertexts. In particular, the following algorithms can be used instead of `VectorEncode` and `VectorDecode` above.
+This results in smaller output sizes for public keys and ciphertexts.
+However, in this case it is no longer feasible to parallelize the encoding of the `k` polynomials; these must be treated as a single vector of `k*n` coefficients in order to achieve a reasonable rate of rejection.
+Therefore, this approach also requires arithmetic over larger integers (up to 1872B integers for ML-KEM1024).
+In particular, the following algorithms can be used instead of `VectorEncode` and `VectorDecode` above.
 
 ~~~
 VectorEncode(a,k):
@@ -335,7 +349,7 @@ See {{randomness-security}} for relevant discussion on keeping this randomness s
 
 ## Relation to Hash-to-Curve {#hash-to-curve}
 
-While the functionality of Kemeleon is similar to hash-to-curve {{RFC9380}} (mapping arbitrary byte strings to public keys/ciphertexts), the applications where hash-to-curve is used do not immediately follow in the KEM-based setting because having such an encapsulation key (without dk) or ciphertext (without dk or ek) does not appear to provide the same functionality, since it is not clear how to continue working with the element in the same way that can be done with an elliptic curve point.
+While the functionality of Kemeleon is similar to hash-to-curve {{RFC9380}} (mapping arbitrary byte strings to public keys/ciphertexts), the applications where hash-to-curve is used do not immediately follow in the KEM-based setting because having such an encapsulation key (without `dk`) or ciphertext (without `dk` or `ek`) does not appear to provide the same functionality, since it is not clear how to continue working with the element in the same way that can be done with an elliptic curve point.
 
 ## Modifying ML-KEM Algorithms {#direct-generation}
 
