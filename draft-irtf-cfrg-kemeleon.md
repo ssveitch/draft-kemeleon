@@ -81,7 +81,6 @@ informative:
 
 This document specifies Kemeleon encoding algorithms for encoding ML-KEM encapsulation keys and ciphertexts as random bytestrings.
 Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, relying on module LWE assumptions.
-This document specifies a number of variants of these encodings, with differing failure rates, output sizes, and performance profiles.
 
 --- middle
 
@@ -95,7 +94,7 @@ For example, applications using Elligator include protocols used for censorship 
 For the post-quantum transition, an analogous encoding for (ML-)KEM encapsulation keys and ciphertexts to random bytestrings is required.
 This document specifies such an encoding, Kemeleon, for ML-KEM encapsulation keys and ciphertexts.
 Kemeleon was introduced in {{GSV24}} for building an (post-quantum) "obfuscated" KEM whose encapsulation keys and ciphertexts are indistinguishable from random.
-This document specifies a version of the Kemeleon encoding that avoids any failure probability.
+This document specifies a version of the Kemeleon encoding that avoids any failure probability, as well as an alternate version that trades some failure probability for smaller encoding size.
 
 # Conventions and Definitions {#conventions}
 
@@ -331,6 +330,14 @@ Kemeleon.DecodeCtxt(ec):
    return (c_1,c_2)
 ~~~
 
+This variant of the encoding is as described in the original work {{GSV24}}, and has the following properties.
+
+| Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations |
+| :----------------------- | -------------------: | -------------------: | ------------------------: |
+| Kemeleon - ML-KEM512     | ek: 781, ctxt: 877   | ek: 0.56, ctxt: 0.51 | Large int (750B) arithmetic |
+| Kemeleon - ML-KEM768     | ek: 1156, ctxt: 1252 | ek: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
+| Kemeleon - ML-KEM1024    | ek: 1530, ctxt: 1658 | ek: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
+{: #summary-alternate title="Summary of Alternate Encoding Properties"}
 
 ## Deterministic Encoding {#deterministic}
 
@@ -385,7 +392,7 @@ Both require the module LWE assumption to hold in order for Kemeleon to maintain
 Furthermore, distinguishing a pair of a Kemeleon-encoded encapsulation key and a Kemeleon-encoded ciphertext from uniformly random bitstrings also reduces to a module LWE assumption.
 
 ## Randomness Sampling {#randomness-security}
-Both encapsulation key and ciphertext encodings in the original Kemeleon encoding are randomized.
+Both encapsulation key and ciphertext encodings in the Kemeleon encoding are randomized.
 The randomness (or seed used to generate randomness) used in Kemeleon encodings MUST be kept secret.
 In particular, public randomness enables distinguishing a Kemeleon-encoded value from a random bytestring:
 Decoding the value in question and re-encoding it with the public randomness will yield the original value if it was Kemeleon-encoded.
@@ -399,6 +406,15 @@ Additionally, rejecting and re-generating encapsulation keys or ciphertexts may 
 
 This document has no IANA actions.
 
+--- back
 
 --- back
 
+# Acknowledgments
+{: numbered="false"}
+
+Thanks to
+{{{Michael Rosenberg}}},
+{{{John Mattsson}}}, and
+{{{Stanislaw Jarecki}}}
+for contributions to this document and helpful discussions.
