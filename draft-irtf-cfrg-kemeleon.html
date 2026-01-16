@@ -10,26 +10,24 @@
 <meta content="Shannon Veitch" name="author">
 <meta content="
        This document specifies Kemeleon encoding algorithms for encoding ML-KEM encapsulation keys and ciphertexts as random bytestrings.
-Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, relying on module LWE assumptions.
-This document specifies a number of variants of these encodings, with differing failure rates, output sizes, and performance profiles. 
+Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, relying on module LWE assumptions. 
     " name="description">
-<meta content="xml2rfc 3.29.0" name="generator">
+<meta content="xml2rfc 3.31.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-irtf-cfrg-kemeleon-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.29.0
-    Python 3.12.11
+  xml2rfc 3.31.0
+    Python 3.12.12
     ConfigArgParse 1.7
     google-i18n-address 3.1.1
-    intervaltree 3.1.0
+    intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 5.3.1
-    platformdirs 4.3.8
+    lxml 6.0.2
+    platformdirs 4.5.1
     pycountry 24.6.1
-    PyYAML 6.0.2
-    requests 2.32.4
-    setuptools 80.9.0
-    wcwidth 0.2.13
+    PyYAML 6.0.3
+    requests 2.32.5
+    wcwidth 0.2.14
 -->
 <link href="draft-irtf-cfrg-kemeleon.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1048,11 +1046,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Kemeleon</td>
-<td class="right">July 2025</td>
+<td class="right">January 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Günther, et al.</td>
-<td class="center">Expires 5 January 2026</td>
+<td class="center">Expires 20 July 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1065,12 +1063,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-irtf-cfrg-kemeleon-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-07-04" class="published">4 July 2025</time>
+<time datetime="2026-01-16" class="published">16 January 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-01-05">5 January 2026</time></dd>
+<dd class="expires"><time datetime="2026-07-20">20 July 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1092,8 +1090,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
 <p id="section-abstract-1">This document specifies Kemeleon encoding algorithms for encoding ML-KEM encapsulation keys and ciphertexts as random bytestrings.
-Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, relying on module LWE assumptions.
-This document specifies a number of variants of these encodings, with differing failure rates, output sizes, and performance profiles.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, relying on module LWE assumptions.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1125,7 +1122,7 @@ This document specifies a number of variants of these encodings, with differing 
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 5 January 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 20 July 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1134,7 +1131,7 @@ This document specifies a number of variants of these encodings, with differing 
 <a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
         </h2>
 <p id="section-boilerplate.2-1">
-            Copyright (c) 2025 IETF Trust and the persons identified as the
+            Copyright (c) 2026 IETF Trust and the persons identified as the
             document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.2-2">
             This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1173,13 +1170,7 @@ This document specifies a number of variants of these encodings, with differing 
                 <p id="section-toc.1-1.4.2.3.1"><a href="#section-4.3" class="auto internal xref">4.3</a>.  <a href="#name-encoding-ciphertexts" class="internal xref">Encoding Ciphertexts</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
-                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-non-rejection-sampling-vari" class="internal xref">Non-Rejection Sampling Variant</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5">
-                <p id="section-toc.1-1.4.2.5.1"><a href="#section-4.5" class="auto internal xref">4.5</a>.  <a href="#name-faster-arithmetic-variant" class="internal xref">Faster Arithmetic Variant</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.6">
-                <p id="section-toc.1-1.4.2.6.1"><a href="#section-4.6" class="auto internal xref">4.6</a>.  <a href="#name-summary-of-encodings" class="internal xref">Summary of Encodings</a></p>
+                <p id="section-toc.1-1.4.2.4.1"><a href="#section-4.4" class="auto internal xref">4.4</a>.  <a href="#name-summary-of-properties" class="internal xref">Summary of Properties</a></p>
 </li>
             </ul>
 </li>
@@ -1187,13 +1178,16 @@ This document specifies a number of variants of these encodings, with differing 
             <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-additional-considerations-f" class="internal xref">Additional Considerations for Applications</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
-                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-deterministic-encoding" class="internal xref">Deterministic Encoding</a></p>
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-smaller-outputs-from-reject" class="internal xref">Smaller Outputs from Rejection Sampling</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
-                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-relation-to-hash-to-curve" class="internal xref">Relation to Hash-to-Curve</a></p>
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-deterministic-encoding" class="internal xref">Deterministic Encoding</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.3">
-                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-modifying-ml-kem-algorithms" class="internal xref">Modifying ML-KEM Algorithms</a></p>
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="auto internal xref">5.3</a>.  <a href="#name-relation-to-hash-to-curve" class="internal xref">Relation to Hash-to-Curve</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.4">
+                <p id="section-toc.1-1.5.2.4.1"><a href="#section-5.4" class="auto internal xref">5.4</a>.  <a href="#name-modifying-ml-kem-algorithms" class="internal xref">Modifying ML-KEM Algorithms</a></p>
 </li>
             </ul>
 </li>
@@ -1226,7 +1220,10 @@ This document specifies a number of variants of these encodings, with differing 
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1244,8 +1241,7 @@ For example, applications using Elligator include protocols used for censorship 
 <p id="section-1-2">For the post-quantum transition, an analogous encoding for (ML-)KEM encapsulation keys and ciphertexts to random bytestrings is required.
 This document specifies such an encoding, Kemeleon, for ML-KEM encapsulation keys and ciphertexts.
 Kemeleon was introduced in <span>[<a href="#GSV24" class="cite xref">GSV24</a>]</span> for building an (post-quantum) "obfuscated" KEM whose encapsulation keys and ciphertexts are indistinguishable from random.
-Beyond the original construction, this document additionally specifies variants that avoid the encoding failing or the use of large integer computations, or allow for a deterministic encoding.
-Aside from these variants, it is notable that the Kemeleon encodings of encapsulation keys results in smaller representations than in the original ML-KEM specification.<a href="#section-1-2" class="pilcrow">¶</a></p>
+This document specifies a version of the Kemeleon encoding that avoids any failure probability, as well as an alternate version that trades some failure probability for smaller encoding size.<a href="#section-1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="conventions">
@@ -1297,13 +1293,10 @@ Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where
 <p id="section-3-6">The following terms and notation are used throughout this document:<a href="#section-3-6" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3-7.1">
-          <p id="section-3-7.1.1"><code>msb(x)</code> refers to the most significant bit of the value x<a href="#section-3-7.1.1" class="pilcrow">¶</a></p>
+          <p id="section-3-7.1.1"><code>a[i]</code> denotes the <code>i</code>th position of a vector <code>a</code> of coefficients<a href="#section-3-7.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-7.2">
-          <p id="section-3-7.2.1"><code>a[i]</code> denotes the <code>i</code>th position of a vector <code>a</code> of coefficients<a href="#section-3-7.2.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-3-7.3">
-          <p id="section-3-7.3.1"><code>concat(x0, ..., xN)</code>: returns the concatenation of bytestrings.<a href="#section-3-7.3.1" class="pilcrow">¶</a></p>
+          <p id="section-3-7.2.1"><code>concat(x0, ..., xN)</code>: returns the concatenation of bytestrings.<a href="#section-3-7.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
@@ -1316,10 +1309,10 @@ Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where
 <p id="section-4-1">At a high level, the constructions in this document instantiate the following functions:<a href="#section-4-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4-2.1">
-          <p id="section-4-2.1.1"><code>EncodePk(ek) -&gt; eek</code> is the (possibly randomized) encoding algorithm that on input an encapsulation key, outputs an obfuscated encapsulation key or an error.<a href="#section-4-2.1.1" class="pilcrow">¶</a></p>
+          <p id="section-4-2.1.1"><code>EncodeEk(ek) -&gt; eek</code> is the (possibly randomized) encoding algorithm that on input an encapsulation key, outputs an obfuscated encapsulation key or an error.<a href="#section-4-2.1.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-4-2.2">
-          <p id="section-4-2.2.1"><code>DecodePk(eek) -&gt; ek</code> is the deterministic decoding algorithm that on input an obfuscated encapsulation key, outputs an encapsulation key.<a href="#section-4-2.2.1" class="pilcrow">¶</a></p>
+          <p id="section-4-2.2.1"><code>DecodeEk(eek) -&gt; ek</code> is the deterministic decoding algorithm that on input an obfuscated encapsulation key, outputs an encapsulation key.<a href="#section-4-2.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-4-2.3">
           <p id="section-4-2.3.1"><code>EncodeCtxt(c) -&gt; ec</code> is the (possibly randomized) encoding algorithm that on input a ciphertext, outputs an obfuscated ciphertext or an error.<a href="#section-4-2.3.1" class="pilcrow">¶</a></p>
@@ -1333,23 +1326,29 @@ Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where
         <h3 id="name-common-functions">
 <a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-common-functions" class="section-name selfRef">Common Functions</a>
         </h3>
-<p id="section-4.1-1">The following function maps a vector of k*n coefficients modulo q to a large integer, rejecting if the most significant bit of the integer is 1.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-1">The following function maps a vector of length <code>n</code> of coefficients modulo <code>q</code> to a large integer.
+Applying the technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span>, where <code>r</code> is the large integer resulting from accumulating coefficients, we then choose <code>m</code> at random from <code>[0,floor((2^(b+t)-r)/(q^n))]</code>, where <code>b = ceil(n*log2(q))</code> and <code>t</code> is a security parameter, and return <code>r + m*q^(n)</code>.
+Notably, the random value <code>m</code> need not be transmitted alongside the encoded values.
+This results in encoded values whose statistical distance from uniform is at most <code>2^-t</code>.
+Notably, this statistical distance is unconditional; we hence fix <code>t=128</code>.
+This results in the encoding size increasing by <code>t</code> bits, i.e., 16 bytes.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.1-2">
 <pre>
 VectorEncode(a):
    r = 0
-   for i from 1 to k*n:
+   t = 128
+   b = ceil(n*log2(q))
+   for i from 1 to n:
       r += q^(i-1)*a[i]
-   if msb(r) == 1:
-      return err
-   else:
-      return r
+   m &lt;--$ [0,...,floor((2^(b+t)-r)/(q^(n)))]
+   return r + m*q^n
 </pre><a href="#section-4.1-2" class="pilcrow">¶</a>
 </div>
 <div class="alignLeft art-text artwork" id="section-4.1-3">
 <pre>
 VectorDecode(r):
-   for i from 1 to k*n:
+   r = r % q^n
+   for i from 1 to n:
       a[i] = r % q
       r = r // q
    return a
@@ -1407,27 +1406,29 @@ SamplePreimage(d,u,c):
 <p id="section-4.2-1">The following algorithms encode ML-KEM encapsulation keys as random bytestrings.
 <code>rho</code> is the public seed used to generate the public matrix <code>A</code> <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>.
 This is already a random 32-byte string, so it is returned alongside the encoded value of <code>t</code>.
-<code>t</code> is a vector of <code>k</code> polynomials with <code>n</code> coefficients, but in the following pseudocode <code>t</code> is treated as a vector of <code>k*n</code> coefficients.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<code>t</code> is a vector of <code>k</code> polynomials with <code>n</code> coefficients.
+We treat each polynomial in <code>t</code> as a vector of <code>n</code> coefficient, for which we apply <code>VectorEncode</code>.
+From this, we obtain <code>k</code> values that are then concatenated.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.2-2">
 <pre>
-Kemeleon.EncodePk(ek = (t, rho)):
-   r = VectorEncode(t)
-   if r == err:
-      return err
-   else:
-      return concat(r,rho)
+Kemeleon.EncodeEk(ek = (t, rho)):
+   for i in range(k):
+      r_i = VectorEncode(t[i])
+   r = concat(r_1,...,r_k)
+   return concat(r,rho)
 </pre><a href="#section-4.2-2" class="pilcrow">¶</a>
 </div>
 <div class="alignLeft art-text artwork" id="section-4.2-3">
 <pre>
-Kemeleon.DecodePk(eek):
-   r,rho = eek # rho is fixed length
-   t = VectorDecode(r)
+Kemeleon.DecodeEk(eek):
+   r_1,..,r_k,rho = eek # rho and each r_i is fixed length
+   t = []
+   for i in range(k):
+      t_i = VectorDecode(r_i)
+      t.append(t_i)
    return (t, rho)
 </pre><a href="#section-4.2-3" class="pilcrow">¶</a>
 </div>
-<p id="section-4.2-4">While the encapsulation key encoding algorithm has some failure probability, the decoding algorithm can never fail.
-Otherwise, a failure in decoding would provide a distinguishing factor between Kemeleon-encoded values and random bitstrings.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="ctxt-encoding">
@@ -1438,9 +1439,118 @@ Otherwise, a failure in decoding would provide a distinguishing factor between K
 <p id="section-4.3-1">ML-KEM ciphertexts consist of two components: <code>c_1</code>, a vector of <code>k</code> polynomials with <code>n</code> coefficients mod <code>2^du</code>, and <code>c_2</code>, a polynomial with <code>n</code> coefficients mod <code>2^dv</code>.
 The coefficients of these polynomials are not uniformly distributed, as a result of the compression step in encapsulation.
 The following encoding function decompresses and recovers a random preimage of this compression step in order to recover the uniform distribution of coefficients.
-Then, the same vector encoding step used for encapsulation keys is applied.
-For the second ciphertext component, rejection sampling is performed to retain uniformity, rather than decompressing.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+Then, the same vector encoding step used for encapsulation keys can be applied.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3-2">
+<pre>
+Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+   u = Decompress_du(c_1)
+   for i from 1 to k*n:
+      u[i] = SamplePreimage(du,u[i],c_1[i])
+   v = Decompress_dv(c_2)
+   for i from 1 to n:
+      v[i] = SamplePreimage(dv,v[i],c_2[i])
+   for i in range(k)
+      r_i = VectorEncode(u[i])
+   r_(k+1) = VectorEncode(v)
+   r = concat(r_0,...,r_(k+1))
+   return r
+</pre><a href="#section-4.3-2" class="pilcrow">¶</a>
+</div>
+<div class="alignLeft art-text artwork" id="section-4.3-3">
+<pre>
+Kemeleon.DecodeCtxt(r):
+   r_0,...,r_(k+1) = r # each r_i is fixed length
+   for i in range(k):
+      u[i] = VectorDecode(r_i)
+   v = VectorDecode(r_(k+1))
+   c_1 = Compress_du(u)
+   c_2 = Compress_dv(v)
+   return (c_1,c_2)
+</pre><a href="#section-4.3-3" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="properties">
+<section id="section-4.4">
+        <h3 id="name-summary-of-properties">
+<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-summary-of-properties" class="section-name selfRef">Summary of Properties</a>
+        </h3>
+<span id="name-summary-of-kemeleon-propert"></span><div id="summary-encoding">
+<table class="center" id="table-1">
+          <caption>
+<a href="#table-1" class="selfRef">Table 1</a>:
+<a href="#name-summary-of-kemeleon-propert" class="selfRef">Summary of Kemeleon Properties</a>
+          </caption>
+<thead>
+            <tr>
+              <th class="text-left" rowspan="1" colspan="1">Algorithm / Parameter</th>
+              <th class="text-right" rowspan="1" colspan="1">Output size (bytes)</th>
+              <th class="text-right" rowspan="1" colspan="1">Success probability</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Kemeleon - ML-KEM512</td>
+              <td class="text-right" rowspan="1" colspan="1">ek: 814, ctxt: 1172</td>
+              <td class="text-right" rowspan="1" colspan="1">ek: 1.00, ctxt: 1.00</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Kemeleon - ML-KEM768</td>
+              <td class="text-right" rowspan="1" colspan="1">ek: 1204, ctxt: 1562</td>
+              <td class="text-right" rowspan="1" colspan="1">ek: 1.00, ctxt: 1.00</td>
+            </tr>
+            <tr>
+              <td class="text-left" rowspan="1" colspan="1">Kemeleon - ML-KEM1024</td>
+              <td class="text-right" rowspan="1" colspan="1">ek: 1594, ctxt: 1953</td>
+              <td class="text-right" rowspan="1" colspan="1">ek: 1.00, ctxt: 1.00</td>
+            </tr>
+          </tbody>
+        </table>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="considerations">
+<section id="section-5">
+      <h2 id="name-additional-considerations-f">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-additional-considerations-f" class="section-name selfRef">Additional Considerations for Applications</a>
+      </h2>
+<p id="section-5-1">This section contains additional considerations and comments related to using Kemeleon encodings in different applications.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<div id="compressonly">
+<section id="section-5.1">
+        <h3 id="name-smaller-outputs-from-reject">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-smaller-outputs-from-reject" class="section-name selfRef">Smaller Outputs from Rejection Sampling</a>
+        </h3>
+<p id="section-5.1-1">In applications willing to incur some probability of failure in encoding, a variant of the encoding algorithm that does not add the additional <code>m</code> value can be used.
+This results in smaller output sizes for public keys and ciphertexts.
+However, in this case it is no longer feasible to parallelize the encoding of the <code>k</code> polynomials; these must be treated as a single vector of <code>k*n</code> coefficients in order to achieve a reasonable rate of rejection.
+Therefore, this approach also requires arithmetic over larger integers (up to 1872B integers for ML-KEM1024).
+In particular, the following algorithms can be used instead of <code>VectorEncode</code> and <code>VectorDecode</code> above.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.1-2">
+<pre>
+VectorEncode(a,k):
+   r = 0
+   for i from 1 to k*n:
+      r += q^(i-1)*a[i]
+   if msb(r) == 1:
+      return err
+   else:
+      return r
+</pre><a href="#section-5.1-2" class="pilcrow">¶</a>
+</div>
+<div class="alignLeft art-text artwork" id="section-5.1-3">
+<pre>
+VectorDecode(r,k):
+   for i from 1 to k*n:
+      a[i] = r % q
+      r = r // q
+   return a
+</pre><a href="#section-5.1-3" class="pilcrow">¶</a>
+</div>
+<p id="section-5.1-4">The encoding algorithms for public keys should handle errors accordingly, returning an error if <code>VectorEncode</code> returns an error.
+For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.1-5">
 <pre>
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    u = Decompress_du(c_1)
@@ -1453,139 +1563,23 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
       if c_2[1] == 0:
          return err with prob. 1/ceil(q/(2^dv))
    return concat(r,c_2)
-</pre><a href="#section-4.3-2" class="pilcrow">¶</a>
+</pre><a href="#section-5.1-5" class="pilcrow">¶</a>
 </div>
-<div class="alignLeft art-text artwork" id="section-4.3-3">
+<div class="alignLeft art-text artwork" id="section-5.1-6">
 <pre>
 Kemeleon.DecodeCtxt(ec):
    r,c_2 = ec # c_2 is fixed length
    u = VectorDecode(r)
    c_1 = Compress_du(u)
    return (c_1,c_2)
-</pre><a href="#section-4.3-3" class="pilcrow">¶</a>
+</pre><a href="#section-5.1-6" class="pilcrow">¶</a>
 </div>
-</section>
-</div>
-<div id="no-rejection">
-<section id="section-4.4">
-        <h3 id="name-non-rejection-sampling-vari">
-<a href="#section-4.4" class="section-number selfRef">4.4. </a><a href="#name-non-rejection-sampling-vari" class="section-name selfRef">Non-Rejection Sampling Variant</a>
-        </h3>
-<p id="section-4.4-1">Applying a technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span> (Section 3.4), the original <code>Kemeleon</code> construction can be adapted to avoid rejection sampling.
-This results in larger output sizes (16 bytes for public keys, notably more for ciphertexts), but the encoding algorithm never fails.<a href="#section-4.4-1" class="pilcrow">¶</a></p>
-<p id="section-4.4-2">Applying the technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span>, where <code>r</code> is the encoded vector before rejection occurs in <code>VectorEncode</code>, we then choose <code>m</code> at random from <code>[0,floor((2^(b+t)-r)/(q^(k*n)))]</code>, where <code>b = ceil(k*n*log2(q))</code> and <code>t</code> is a security parameter, and return <code>r + m*q^(k*n)</code>.
-This variant results in encoded values whose statistical distance from uniform is at most <code>2^-t</code>.
-Notably, this statistical distance is unconditional; we hence fix <code>t=128</code>.
-This results in the encoding size increasing by <code>t</code> bits, i.e., 16 bytes.<a href="#section-4.4-2" class="pilcrow">¶</a></p>
-<p id="section-4.4-3">For encapsulation key encodings, one can immediately replace <code>VectorEncode</code> and <code>VectorDecode</code> calls with calls to the following algorithms, where <code>k</code> is as defined by the appropriate ML-KEM parameter set.<a href="#section-4.4-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.4-4">
-<pre>
-VectorEncodeNR(a,k):
-   r = 0
-   t = 128
-   b = ceil(k*n*log2(q))
-   for i from 1 to k*n:
-      r += q^(i-1)*a[i]
-   m &lt;--$ [0,...,floor((2^(b+t)-r)/(q^(k*n)))]
-   return r + m*q^(k*n)
-</pre><a href="#section-4.4-4" class="pilcrow">¶</a>
-</div>
-<div class="alignLeft art-text artwork" id="section-4.4-5">
-<pre>
-VectorDecodeNR(r,k):
-   r = r % q^(k*n)
-   for i from 1 to k*n:
-      a[i] = r % q
-      r = r // q
-   return a
-</pre><a href="#section-4.4-5" class="pilcrow">¶</a>
-</div>
-<p id="section-4.4-6">Notably, the random value <code>m</code> need not be transmitted alongside the encoded values.<a href="#section-4.4-6" class="pilcrow">¶</a></p>
-<p id="section-4.4-7">For ciphertext encodings, one must also avoid rejection sampling based on coefficients of the second component of the ciphertext.
-Therefore, the new ciphertext encoding must decompress and <code>VectorEncodeNR</code> the second component of the ciphertext.
-This more significantly increases the size of the encoded ciphertext.<a href="#section-4.4-7" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.4-8">
-<pre>
-Kemeleon.EncodeCtxtNR(c = (c_1,c_2)):
-   u = Decompress_du(c_1)
-   for i from 1 to k*n:
-      u[i] = SamplePreimage(du,u[i],c_1[i])
-   v = Decompress_dv(c_2)
-   for i from 1 to n:
-      v[i] = SamplePreimage(dv,v[i],c_2[i])
-   w = [u,v] # treat u,v as a singular vector of (k+1)*n coefficients
-   r = VectorEncodeNR(w,k+1)
-   return r
-</pre><a href="#section-4.4-8" class="pilcrow">¶</a>
-</div>
-<div class="alignLeft art-text artwork" id="section-4.4-9">
-<pre>
-Kemeleon.DecodeCtxtNR(r):
-   w = VectorDecodeNR(r,k+1)
-   u,v = w # u, v are fixed length
-   c_1 = Compress_du(u)
-   c_2 = Compress_dv(v)
-   return (c_1,c_2)
-</pre><a href="#section-4.4-9" class="pilcrow">¶</a>
-</div>
-</section>
-</div>
-<div id="faster">
-<section id="section-4.5">
-        <h3 id="name-faster-arithmetic-variant">
-<a href="#section-4.5" class="section-number selfRef">4.5. </a><a href="#name-faster-arithmetic-variant" class="section-name selfRef">Faster Arithmetic Variant</a>
-        </h3>
-<p id="section-4.5-1">OPEN ISSUE: Is the faster variant of interest? If so, the following can be extended with a complete description.<a href="#section-4.5-1" class="pilcrow">¶</a></p>
-<p id="section-4.5-2">Observing that <code>q = 3329 = 13*2^8+1</code>, a variant of <code>Kemeleon</code> with faster integer arithmetic can be specified.
-First, the encoding rejects any polynomial with a coefficient equal to <code>q-1 = 3328</code>.
-This ensures that all arithmetic can be computed with values modulo <code>q-1 = 13*2^8</code>.
-Then, note that rather than accumulating values to a large integer mod <code>q^(k*n)</code>, it is only required to accumulate values to an integer mod <code>13^(k*n)</code>, while keeping track of the 8 lower order bits of each coefficient.
-The output size of the encoding does not change, but this results in an increased rejection rate.<a href="#section-4.5-2" class="pilcrow">¶</a></p>
-<p id="section-4.5-3">In particular, <a href="#fast-succ-prob" class="auto internal xref">Table 1</a> gives success probabilities for encapsulation key and ciphertext encodings:<a href="#section-4.5-3" class="pilcrow">¶</a></p>
-<span id="name-success-probabilities-for-f"></span><div id="fast-succ-prob">
-<table class="center" id="table-1">
-          <caption>
-<a href="#table-1" class="selfRef">Table 1</a>:
-<a href="#name-success-probabilities-for-f" class="selfRef">Success probabilities for faster Kemeleon encoding</a>
-          </caption>
-<thead>
-            <tr>
-              <th class="text-left" rowspan="1" colspan="1">Parameter</th>
-              <th class="text-right" rowspan="1" colspan="1">ek success probability</th>
-              <th class="text-right" rowspan="1" colspan="1">ctxt success probability</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">ML-KEM-512</td>
-              <td class="text-right" rowspan="1" colspan="1">0.49</td>
-              <td class="text-right" rowspan="1" colspan="1">0.45</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">ML-KEM-768</td>
-              <td class="text-right" rowspan="1" colspan="1">0.29</td>
-              <td class="text-right" rowspan="1" colspan="1">0.25</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">ML-KEM-1024</td>
-              <td class="text-right" rowspan="1" colspan="1">0.53</td>
-              <td class="text-right" rowspan="1" colspan="1">0.47</td>
-            </tr>
-          </tbody>
-        </table>
-</div>
-</section>
-</div>
-<div id="comparison">
-<section id="section-4.6">
-        <h3 id="name-summary-of-encodings">
-<a href="#section-4.6" class="section-number selfRef">4.6. </a><a href="#name-summary-of-encodings" class="section-name selfRef">Summary of Encodings</a>
-        </h3>
-<span id="name-summary-of-kemeleon-variant"></span><div id="summary-encoding">
+<p id="section-5.1-7">This variant of the encoding is as described in the original work <span>[<a href="#GSV24" class="cite xref">GSV24</a>]</span>, and has the following properties.<a href="#section-5.1-7" class="pilcrow">¶</a></p>
+<span id="name-summary-of-alternate-encodi"></span><div id="summary-alternate">
 <table class="center" id="table-2">
           <caption>
 <a href="#table-2" class="selfRef">Table 2</a>:
-<a href="#name-summary-of-kemeleon-variant" class="selfRef">Summary of Kemeleon Variants, NR = No Reject, FT = Faster</a>
+<a href="#name-summary-of-alternate-encodi" class="selfRef">Summary of Alternate Encoding Properties</a>
           </caption>
 <thead>
             <tr>
@@ -1614,116 +1608,71 @@ The output size of the encoding does not change, but this results in an increase
               <td class="text-right" rowspan="1" colspan="1">ek: 0.62, ctxt: 0.57</td>
               <td class="text-right" rowspan="1" colspan="1">Large int (1500B) arithmetic</td>
             </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM512</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 797, ctxt: 1140</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 1.00, ctxt: 1.00</td>
-              <td class="text-right" rowspan="1" colspan="1">Large int (1123B) arithmetic</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM768</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 1172, ctxt: 1514</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 1.00, ctxt: 1.00</td>
-              <td class="text-right" rowspan="1" colspan="1">Large int (1498B) arithmetic</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">KemeleonNR - ML-KEM1024</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 1546, ctxt: 1889</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 1.00, ctxt: 1.00</td>
-              <td class="text-right" rowspan="1" colspan="1">Large int (1872B) arithmetic</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">KemeleonFT - ML-KEM512</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 781, ctxt: 877</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 0.49, ctxt: 0.45</td>
-              <td class="text-right" rowspan="1" colspan="1">Smaller int (235B) arithmetic</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">KemeleonFT - ML-KEM768</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 1156, ctxt: 1252</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 0.29, ctxt: 0.25</td>
-              <td class="text-right" rowspan="1" colspan="1">Smaller int (355B) arithmetic</td>
-            </tr>
-            <tr>
-              <td class="text-left" rowspan="1" colspan="1">KemeleonFT - ML-KEM1024</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 1530, ctxt: 1658</td>
-              <td class="text-right" rowspan="1" colspan="1">ek: 0.53, ctxt: 0.47</td>
-              <td class="text-right" rowspan="1" colspan="1">Smaller int (475B) arithmetic</td>
-            </tr>
           </tbody>
         </table>
 </div>
 </section>
 </div>
-</section>
-</div>
-<div id="considerations">
-<section id="section-5">
-      <h2 id="name-additional-considerations-f">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-additional-considerations-f" class="section-name selfRef">Additional Considerations for Applications</a>
-      </h2>
-<p id="section-5-1">This section contains additional considerations and comments related to using Kemeleon encodings in different applications.<a href="#section-5-1" class="pilcrow">¶</a></p>
 <div id="deterministic">
-<section id="section-5.1">
+<section id="section-5.2">
         <h3 id="name-deterministic-encoding">
-<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-deterministic-encoding" class="section-name selfRef">Deterministic Encoding</a>
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-deterministic-encoding" class="section-name selfRef">Deterministic Encoding</a>
         </h3>
-<p id="section-5.1-1">The randomness used in <code>Kemeleon</code> ciphertext encodings <span class="bcp14">MAY</span> be derived in a deterministic manner.
-To do so, following a call to <code>Encap</code> which returns a KEM key <code>K</code> and a ciphertext <code>c</code>, the following steps can be taken:<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-1">The randomness used in <code>Kemeleon</code> ciphertext encodings <span class="bcp14">MAY</span> be derived in a deterministic manner.
+To do so, following a call to <code>Encap</code> which returns a KEM key <code>K</code> and a ciphertext <code>c</code>, the following steps can be taken:<a href="#section-5.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-5.1-2.1">
-            <p id="section-5.1-2.1.1">Using a key derivation function (KDF), derive from the key <code>K</code> a new key <code>K'</code> and a seed for randomness <code>rnd</code>.<a href="#section-5.1-2.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-5.2-2.1">
+            <p id="section-5.2-2.1.1">Using a key derivation function (KDF), derive from the key <code>K</code> a new key <code>K'</code> and a seed for randomness <code>rnd</code>.<a href="#section-5.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-5.1-2.2">
-            <p id="section-5.1-2.2.1">The seed <code>rnd</code> can be used to generate the randomness required when encoding the ciphertext <code>c</code>.<a href="#section-5.1-2.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-5.2-2.2">
+            <p id="section-5.2-2.2.1">The seed <code>rnd</code> can be used to generate the randomness required when encoding the ciphertext <code>c</code>.<a href="#section-5.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-5.1-2.3">
-            <p id="section-5.1-2.3.1">Use <code>K'</code> in place of <code>K</code> wherever applicable in the remainder of the protocol/system.<a href="#section-5.1-2.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-5.2-2.3">
+            <p id="section-5.2-2.3.1">Use <code>K'</code> in place of <code>K</code> wherever applicable in the remainder of the protocol/system.<a href="#section-5.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-5.1-2.4">
-            <p id="section-5.1-2.4.1">Upon any call to <code>Decap</code>, apply the same KDF to derive the new key <code>K'</code>, as required.<a href="#section-5.1-2.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-5.2-2.4">
+            <p id="section-5.2-2.4.1">Upon any call to <code>Decap</code>, apply the same KDF to derive the new key <code>K'</code>, as required.<a href="#section-5.2-2.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-5.1-3">Deriving a new KEM key for use in the remainder of a system is crucial in order to ensure key separation (i.e., the implementation <span class="bcp14">MUST NOT</span> use the original key <code>K</code> to derive randomness and for other purposes).<a href="#section-5.1-3" class="pilcrow">¶</a></p>
-<p id="section-5.1-4">The randomness used to encode an encapsulation key <span class="bcp14">MAY</span> be stored alongside the corresponding decapsulation key, if it is subsequently needed.
-See <a href="#randomness-security" class="auto internal xref">Section 6.2</a> for relevant discussion on keeping this randomness secret.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">Deriving a new KEM key for use in the remainder of a system is crucial in order to ensure key separation (i.e., the implementation <span class="bcp14">MUST NOT</span> use the original key <code>K</code> to derive randomness and for other purposes).<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2-4">The randomness used to encode an encapsulation key <span class="bcp14">MAY</span> be stored alongside the corresponding decapsulation key, if it is subsequently needed.
+See <a href="#randomness-security" class="auto internal xref">Section 6.2</a> for relevant discussion on keeping this randomness secret.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="hash-to-curve">
-<section id="section-5.2">
+<section id="section-5.3">
         <h3 id="name-relation-to-hash-to-curve">
-<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-relation-to-hash-to-curve" class="section-name selfRef">Relation to Hash-to-Curve</a>
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-relation-to-hash-to-curve" class="section-name selfRef">Relation to Hash-to-Curve</a>
         </h3>
-<p id="section-5.2-1">While the functionality of Kemeleon is similar to hash-to-curve <span>[<a href="#RFC9380" class="cite xref">RFC9380</a>]</span> (mapping arbitrary byte strings to public keys/ciphertexts), the applications where hash-to-curve is used do not immediately follow in the KEM-based setting because having such an encapsulation key (without dk) or ciphertext (without dk or ek) does not appear to provide the same functionality, since it is not clear how to continue working with the element in the same way that can be done with an elliptic curve point.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.3-1">While the functionality of Kemeleon is similar to hash-to-curve <span>[<a href="#RFC9380" class="cite xref">RFC9380</a>]</span> (mapping arbitrary byte strings to public keys/ciphertexts), the applications where hash-to-curve is used do not immediately follow in the KEM-based setting because having such an encapsulation key (without <code>dk</code>) or ciphertext (without <code>dk</code> or <code>ek</code>) does not appear to provide the same functionality, since it is not clear how to continue working with the element in the same way that can be done with an elliptic curve point.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="direct-generation">
-<section id="section-5.3">
+<section id="section-5.4">
         <h3 id="name-modifying-ml-kem-algorithms">
-<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-modifying-ml-kem-algorithms" class="section-name selfRef">Modifying ML-KEM Algorithms</a>
+<a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-modifying-ml-kem-algorithms" class="section-name selfRef">Modifying ML-KEM Algorithms</a>
         </h3>
-<p id="section-5.3-1">In applications that <em>only</em> require Kemeleon-encoded values <em>and</em> where the underlying ML-KEM implementation can be modified, the ciphertext encoding algorithm (and ML-KEM encapsulation/decapsulation algorithms) <span class="bcp14">MAY</span> be adapted as follows for improved efficiency.
+<p id="section-5.4-1">In applications that <em>only</em> require Kemeleon-encoded values <em>and</em> where the underlying ML-KEM implementation can be modified, the ciphertext encoding algorithm (and ML-KEM encapsulation/decapsulation algorithms) <span class="bcp14">MAY</span> be adapted as follows for improved efficiency.
 In particular, the compression step in the ML-KEM encapsulation algorithm can be omitted, and therefore, the decompression step in the Kemeleon algorithm can be omitted.
 In the implementation of ML-KEM, the compression step (lines 22-23 of Algorithm 14 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) and corresponding decompression step (lines 3-4 of Algorithm 15 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) can be omitted from the encapsulation/decapsulation algorithms in ML-KEM.
-In this case, the Kemeleon encoding algorithm for ciphertexts would omit the <code>Decompress</code> and <code>SamplePreimage</code> steps and immediately apply <code>VectorEncode</code>:<a href="#section-5.3-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-5.3-2">
+In this case, the Kemeleon encoding algorithm for ciphertexts would omit the <code>Decompress</code> and <code>SamplePreimage</code> steps and immediately apply <code>VectorEncode</code>:<a href="#section-5.4-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.4-2">
 <pre>
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    w = [c_1,c_2] # treat c_1,c_2 as a singular vector of (k+1)*n coefficients
-   r = VectorEncode(w) # this call should use k+1 in all instances of k when accumulating to a large integer in VectorEncode
+   r = VectorEncode(w,k+1)
    return r
-</pre><a href="#section-5.3-2" class="pilcrow">¶</a>
+</pre><a href="#section-5.4-2" class="pilcrow">¶</a>
 </div>
-<p id="section-5.3-3">Decoding is adapted analogously.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-5.3-4">
+<p id="section-5.4-3">Decoding is adapted analogously.<a href="#section-5.4-3" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-5.4-4">
 <pre>
 Kemeleon.DecodeCtxt(ec):
-   w = VectorDecode(r) # this call should use k+1 in all instances of k in VectorDecode
+   w = VectorDecode(r,k+1)
    c_1,c_2 = w # c_1, c_2 are fixed length
    return (c_1,c_2)
-</pre><a href="#section-5.3-4" class="pilcrow">¶</a>
+</pre><a href="#section-5.4-4" class="pilcrow">¶</a>
 </div>
-<p id="section-5.3-5">Naturally, these algorithms can use <code>VectorEncodeNR</code>, <code>VectorDecodeNR</code>, if the non-rejecting variant is desirable.<a href="#section-5.3-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1750,7 +1699,7 @@ Furthermore, distinguishing a pair of a Kemeleon-encoded encapsulation key and a
         <h3 id="name-randomness-sampling">
 <a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-randomness-sampling" class="section-name selfRef">Randomness Sampling</a>
         </h3>
-<p id="section-6.2-1">Both encapsulation key and ciphertext encodings in the original Kemeleon encoding are randomized.
+<p id="section-6.2-1">Both encapsulation key and ciphertext encodings in the Kemeleon encoding are randomized.
 The randomness (or seed used to generate randomness) used in Kemeleon encodings <span class="bcp14">MUST</span> be kept secret.
 In particular, public randomness enables distinguishing a Kemeleon-encoded value from a random bytestring:
 Decoding the value in question and re-encoding it with the public randomness will yield the original value if it was Kemeleon-encoded.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
@@ -1761,9 +1710,9 @@ Decoding the value in question and re-encoding it with the public randomness wil
         <h3 id="name-timing-side-channels">
 <a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-timing-side-channels" class="section-name selfRef">Timing Side-Channels</a>
         </h3>
-<p id="section-6.3-1">Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings, in particular those with a non-zero failure probability.
-Rejecting and re-generating encapsulation keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.
-Additionally, the algorithms required to perform big integer arithmetic may leak information via timing.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.3-1">Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings.
+Algorithms required to perform large integer arithmetic may leak information via timing.
+Additionally, rejecting and re-generating encapsulation keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1822,11 +1771,11 @@ Additionally, the algorithms required to perform big integer arithmetic may leak
 <dl class="references">
 <dt id="CPACE">[CPACE]</dt>
         <dd>
-<span class="refAuthor">Abdalla, M.</span>, <span class="refAuthor">Haase, B.</span>, and <span class="refAuthor">J. Hesse</span>, <span class="refTitle">"CPace, a balanced composable PAKE"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-cpace-14</span>, <time datetime="2025-04-16" class="refDate">16 April 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-cpace-14">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-cpace-14</a>&gt;</span>. </dd>
+<span class="refAuthor">Abdalla, M.</span>, <span class="refAuthor">Haase, B.</span>, and <span class="refAuthor">J. Hesse</span>, <span class="refTitle">"CPace, a balanced composable PAKE"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-irtf-cfrg-cpace-17</span>, <time datetime="2025-12-18" class="refDate">18 December 2025</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-cpace-17">https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-cpace-17</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="ECDH-PSI">[ECDH-PSI]</dt>
         <dd>
-<span class="refAuthor">Wang, Y.</span>, <span class="refAuthor">Chang</span>, <span class="refAuthor">Lu, Y.</span>, <span class="refAuthor">Hong, C.</span>, and <span class="refAuthor">J. Peng</span>, <span class="refTitle">"PSI based on ECDH"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ecdh-psi-00</span>, <time datetime="2024-10-21" class="refDate">21 October 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00">https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00</a>&gt;</span>. </dd>
+<span class="refAuthor">Wang, Y.</span>, <span class="refAuthor">ChangWenting</span>, <span class="refAuthor">Lu, Y.</span>, <span class="refAuthor">Hong, C.</span>, and <span class="refAuthor">J. Peng</span>, <span class="refTitle">"PSI based on ECDH"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ecdh-psi-00</span>, <time datetime="2024-10-21" class="refDate">21 October 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00">https://datatracker.ietf.org/doc/html/draft-ecdh-psi-00</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="OBFS4">[OBFS4]</dt>
         <dd>
@@ -1841,8 +1790,20 @@ Additionally, the algorithms required to perform big integer arithmetic may leak
 </div>
 </section>
 </div>
-<div id="authors-addresses">
+<div id="acknowledgments">
 <section id="appendix-A">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="appendix-A-1">Thanks to
+<span class="contact-name">Michael Rosenberg</span>,
+<span class="contact-name">John Mattsson</span>, and
+<span class="contact-name">Stanislaw Jarecki</span>
+for contributions to this document and helpful discussions.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-B">
       <h2 id="name-authors-addresses">
 <a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
