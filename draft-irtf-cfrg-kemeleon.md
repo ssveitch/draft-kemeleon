@@ -278,7 +278,7 @@ Kemeleon.DecodeCtxt(r):
 
 This section contains additional considerations and comments related to using Kemeleon encodings in different applications.
 
-## Smaller Outputs from Rejection Sampling {#compressonly}
+## Smaller Outputs from Rejection Sampling {#rejection-sampling}
 
 In applications willing to incur some probability of failure in encoding, a variant of the encoding algorithm that does not add the additional `m` value can be used.
 This results in smaller output sizes for public keys and ciphertexts.
@@ -287,7 +287,7 @@ Therefore, this approach also requires arithmetic over larger integers (up to 18
 In particular, the following algorithms can be used instead of `VectorEncode` and `VectorDecode` above.
 
 ~~~
-VectorEncode(a,k):
+VectorEncodeR(a,k):
    r = 0
    for i from 1 to k*n:
       r += q^(i-1)*a[i]
@@ -298,7 +298,7 @@ VectorEncode(a,k):
 ~~~
 
 ~~~
-VectorDecode(r,k):
+VectorDecodeR(r,k):
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
@@ -309,7 +309,7 @@ The encoding algorithms for public keys should handle errors accordingly, return
 For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.
 
 ~~~
-Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
@@ -323,7 +323,7 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
 ~~~
 
 ~~~
-Kemeleon.DecodeCtxt(ec):
+Kemeleon.DecodeCtxtR(ec):
    r,c_2 = ec # c_2 is fixed length
    u = VectorDecode(r)
    c_1 = Compress_du(u)
