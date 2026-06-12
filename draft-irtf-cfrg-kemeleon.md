@@ -270,9 +270,9 @@ Kemeleon.DecodeCtxt(r):
 
 | Algorithm / Parameter    | Output size (bytes)  | Success probability  |
 | :----------------------- | -------------------: | -------------------: |
-| Kemeleon - ML-KEM512     | ek: 800, ctxt: 1152  | ek: 1.00, ctxt: 1.00 |
-| Kemeleon - ML-KEM768     | ek: 1184, ctxt: 1536 | ek: 1.00, ctxt: 1.00 |
-| Kemeleon - ML-KEM1024    | ek: 1568, ctxt: 1920 | ek: 1.00, ctxt: 1.00 |
+| Kemeleon - ML-KEM-512    | ek: 800, ctxt: 1152  | ek: 1.00, ctxt: 1.00 |
+| Kemeleon - ML-KEM-768    | ek: 1184, ctxt: 1536 | ek: 1.00, ctxt: 1.00 |
+| Kemeleon - ML-KEM-1024   | ek: 1568, ctxt: 1920 | ek: 1.00, ctxt: 1.00 |
 {: #summary-encoding title="Summary of Kemeleon Properties"}
 
 # Additional Considerations for Applications {#considerations}
