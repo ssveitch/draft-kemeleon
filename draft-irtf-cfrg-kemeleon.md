@@ -112,9 +112,10 @@ A KEM consists of three algorithms:
 The following variables and functions are adopted from {{FIPS203}}:
 
 - `q = 3329`, `n = 256`
-- `Compress_d : x -> round((2^d/q)*x) mod 2^d` (Equation 4.7)
-- `Decompress_d : y -> round((q/2^d)*y)` (Equation 4.8)
-- remaining parameters `k`, `d_u`, `d_v`, etc. are defined by the respective ML-KEM parameter set -- this document writes `du` and `dv` in place of `d_u`, `d_v` in pseudocode
+- `Compress_d : x -> round((2^d/q)*x) mod 2^d` (Equation 4.7 {{FIPS203}})
+- `Decompress_d : y -> round((q/2^d)*y)` (Equation 4.8 {{FIPS203}})
+- `k = 2` for ML-KEM-512, `k = 3` for ML-KEM-768, `k = 4` for ML-KEM-1024
+- remaining parameters `d_u`, `d_v`, etc. are defined by the respective ML-KEM parameter set (Table 2 {{FIPS203}}) -- this document writes `du` and `dv` in place of `d_u`, `d_v` in pseudocode
 
 `ML-KEM.KeyGen()` (Section 7.1 {{FIPS203}}) produces an encapsulation key, `ek` and a decapsulation key, `dk`.
 Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix `A`.
@@ -280,11 +281,13 @@ This section contains additional considerations and comments related to using Ke
 
 ## Smaller Outputs from Rejection Sampling {#rejection-sampling}
 
-In applications willing to incur some probability of failure in encoding, a variant of the encoding algorithm that does not add the additional `m` value can be used.
-This results in smaller output sizes for public keys and ciphertexts.
-However, in this case it is no longer feasible to parallelize the encoding of the `k` polynomials; these must be treated as a single vector of `k*n` coefficients in order to achieve a reasonable rate of rejection.
-Therefore, this approach also requires arithmetic over larger integers (up to 1872B integers for ML-KEM1024).
+In applications willing to incur some probability of failure in encoding, the following variant of the encoding algorithms that result in smaller output sizes for encapsulation keys and ciphertexts can be used.
 In particular, the following algorithms can be used instead of `VectorEncode` and `VectorDecode` above.
+
+Encoding in this case accumulates all `k` polynomials into one large integer `r` and rejects if the most significant bit `msb(r)` is `1`.
+The resulting bitstring is padded with random bits for byte alignment.
+In this variant, it is no longer feasible to parallelize the encoding of the `k` polynomials; these must be treated as a single vector of `k*n` coefficients in order to achieve a reasonable rate of rejection.
+Therefore, this approach also requires arithmetic over larger integers (up to `ceil(log2(q^(4n))) = 11,982` bit integers for ML-KEM-1024, where `k = 4`).
 
 ~~~
 VectorEncodeR(a,k):
@@ -293,12 +296,16 @@ VectorEncodeR(a,k):
       r += q^(i-1)*a[i]
    if msb(r) == 1:
       return err
-   else:
-      return r
+   b = floor(log2(q^(k*n)))  # bit size of r, without msb(r) = 0
+   for j from b to (b + (8 - (b % 8)))-1  # remaining bits up to byte-aligned
+      randbit <--$ [0,1]
+      r = r + (randbit << j)
+   return r
 ~~~
 
 ~~~
 VectorDecodeR(r,k):
+   <<TODO>> drop random top bits
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
@@ -313,19 +320,20 @@ Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
-   r = VectorEncode(u)
+   r = VectorEncodeR(u)
    if r == err:
       return err
    for i from 1 to n:
       if c_2[1] == 0:
          return err with prob. 1/ceil(q/(2^dv))
+   <<TODO>> make c_2 uniform random byte-aligned
    return concat(r,c_2)
 ~~~
 
 ~~~
 Kemeleon.DecodeCtxtR(ec):
    r,c_2 = ec # c_2 is fixed length
-   u = VectorDecode(r)
+   u = VectorDecodeR(r)
    c_1 = Compress_du(u)
    return (c_1,c_2)
 ~~~
