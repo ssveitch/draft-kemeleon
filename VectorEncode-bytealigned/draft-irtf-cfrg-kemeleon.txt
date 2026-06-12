@@ -316,14 +316,14 @@ Table of Contents
    | Algorithm / Parameter | Output size (bytes) |             Success |
    |                       |                     |         probability |
    +=======================+=====================+=====================+
-   | Kemeleon - ML-KEM512  | ek: 800, ctxt: 1152 |           ek: 1.00, |
+   | Kemeleon - ML-KEM-512 | ek: 800, ctxt: 1152 |           ek: 1.00, |
    |                       |                     |          ctxt: 1.00 |
    +-----------------------+---------------------+---------------------+
-   | Kemeleon - ML-KEM768  |     ek: 1184, ctxt: |           ek: 1.00, |
+   | Kemeleon - ML-KEM-768 |     ek: 1184, ctxt: |           ek: 1.00, |
    |                       |                1536 |          ctxt: 1.00 |
    +-----------------------+---------------------+---------------------+
-   | Kemeleon - ML-KEM1024 |     ek: 1568, ctxt: |           ek: 1.00, |
-   |                       |                1920 |          ctxt: 1.00 |
+   | Kemeleon - ML-        |     ek: 1568, ctxt: |           ek: 1.00, |
+   | KEM-1024              |                1920 |          ctxt: 1.00 |
    +-----------------------+---------------------+---------------------+
 
                   Table 1: Summary of Kemeleon Properties
