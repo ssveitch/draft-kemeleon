@@ -332,11 +332,11 @@ Kemeleon.DecodeCtxtR(ec):
 
 This variant of the encoding is as described in the original work {{GSV24}}, and has the following properties.
 
-| Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations |
-| :----------------------- | -------------------: | -------------------: | ------------------------: |
-| Kemeleon - ML-KEM512     | ek: 781, ctxt: 877   | ek: 0.56, ctxt: 0.51 | Large int (750B) arithmetic |
-| Kemeleon - ML-KEM768     | ek: 1156, ctxt: 1252 | ek: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
-| Kemeleon - ML-KEM1024    | ek: 1530, ctxt: 1658 | ek: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
+| Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations    |
+| :----------------------- | -------------------: | -------------------: | ------------------------:    |
+| Kemeleon - ML-KEM-512    | ek: 781, ctxt: 877   | ek: 0.56, ctxt: 0.51 | Large int (750B) arithmetic  |
+| Kemeleon - ML-KEM-768    | ek: 1156, ctxt: 1252 | ek: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
+| Kemeleon - ML-KEM-1024   | ek: 1530, ctxt: 1658 | ek: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
 {: #summary-alternate title="Summary of Alternate Encoding Properties"}
 
 ## Deterministic Encoding {#deterministic}
