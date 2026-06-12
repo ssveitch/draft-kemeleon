@@ -136,12 +136,11 @@ At a high level, the constructions in this document instantiate the following fu
 
 ## Common Functions {#common-func}
 
-The following function maps a vector of length `n` of coefficients modulo `q` to a large integer.
-Applying the technique from {{ELL2}}, where `r` is the large integer resulting from accumulating coefficients, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^n))]`, where `b = ceil(n*log2(q))` and `t` is a security parameter, and return `r + m*q^(n)`.
-Notably, the random value `m` need not be transmitted alongside the encoded values.
-This results in encoded values whose statistical distance from uniform is at most `2^-t`.
-Notably, this statistical distance is unconditional; we hence fix `t=128`.
-This results in the encoding size increasing by `t` bits, i.e., 16 bytes.
+The following function `VectorEncode` maps a vector of length `n` of coefficients modulo `q` to a large integer `r` such that `r` is byte-aligned and (statistically close to) uniformly distributed.
+`VectorEncode` first accumulates the coefficients into a large integer `r` and then, applying the technique from {{ELL2}}, adds `m * q^n`,
+where `m` is chosen at random from `[0,floor((2^3072-r)/(q^n))]`.
+This results in an encoded output value byte-aligned to `384` bytes (the same size as the ML-KEM vector encoding)
+whose statistical distance from uniform is at most `2^-76`.
 
 ~~~
 VectorEncode(a):
@@ -154,6 +153,8 @@ VectorEncode(a):
    return r + m*q^n
 ~~~
 
+The following function `VectorDecode` inverts the above mapping.
+
 ~~~
 VectorDecode(r):
    r = r % q^n
@@ -163,7 +164,7 @@ VectorDecode(r):
    return a
 ~~~
 
-The following algorithm samples an uncompressed pre-image of a coefficient `c` at random, where `u` is the decompressed value of `c`.
+The following algorithm `SamplePreimage` samples an uncompressed pre-image of a coefficient `c` at random, where `u` is the decompressed value of `c`.
 It must take as input values of `u` that are output from `Decompress_d`.
 The mapping is based on the `Compress_d`, `Decompress_d` algorithms from (Section 4.2.1 {{FIPS203}}).
 
@@ -269,9 +270,9 @@ Kemeleon.DecodeCtxt(r):
 
 | Algorithm / Parameter    | Output size (bytes)  | Success probability  |
 | :----------------------- | -------------------: | -------------------: |
-| Kemeleon - ML-KEM512   | ek: 814, ctxt: 1172  | ek: 1.00, ctxt: 1.00 |
-| Kemeleon - ML-KEM768   | ek: 1204, ctxt: 1562 | ek: 1.00, ctxt: 1.00 |
-| Kemeleon - ML-KEM1024  | ek: 1594, ctxt: 1953 | ek: 1.00, ctxt: 1.00 |
+| Kemeleon - ML-KEM512     | ek: 800, ctxt: 1152  | ek: 1.00, ctxt: 1.00 |
+| Kemeleon - ML-KEM768     | ek: 1184, ctxt: 1536 | ek: 1.00, ctxt: 1.00 |
+| Kemeleon - ML-KEM1024    | ek: 1568, ctxt: 1920 | ek: 1.00, ctxt: 1.00 |
 {: #summary-encoding title="Summary of Kemeleon Properties"}
 
 # Additional Considerations for Applications {#considerations}
