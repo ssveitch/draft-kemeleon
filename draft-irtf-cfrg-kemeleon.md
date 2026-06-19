@@ -382,6 +382,14 @@ This variant of the encoding is as described in the original work {{GSV24}}, and
 | Kemeleon - ML-KEM-1024   | ek: 1530, ctxt: 1658 | ek: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
 {: #summary-alternate title="Summary of Alternate Encoding Properties"}
 
+
+### Compressing Encapsulation Keys without Rejection Sampling
+
+Applications merely interested in compressing encapsulation keys may use `EncodeEkR` and `DecodeEkR` without rejection and random padding in `VectorEncodeR`.
+The resulting encoded encapsulation keys will NOT be uniformly random, but have smaller output size as in {{summary-alternate}}.
+
+
+
 ## Deterministic Encoding {#deterministic}
 
 The randomness used in `Kemeleon` ciphertext encodings MAY be derived in a deterministic manner.
