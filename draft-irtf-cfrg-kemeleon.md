@@ -315,9 +315,11 @@ The following helper functions randomize resp. clear the unused bits of the top 
 IntegerRandomizeUnused(r,k):
    b = floor(log2(q^(k*n)))    # bit size of r, without msb(r) = 0
    x = 8 - (b % 8)             # number of unused bits
-   for j from b to b + x - 1   # remaining bits up to byte-aligned
-      randbit <--$ [0,1]
-      r = r + (randbit << j)
+   r_bytes = to_bytes(r)       # network byte order
+   mask = 0xFF << (8 - x) & 0xFF
+   rand = random_byte(1)       # sample 1 byte uniformly random
+   r_bytes[0] = r_bytes[0] | (rand & mask)
+   r = from_bytes(r_bytes)
    return r
 ~~~
 
