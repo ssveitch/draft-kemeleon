@@ -285,7 +285,7 @@ In applications willing to incur some probability of failure in encoding, the fo
 In particular, the following algorithms can be used instead of `VectorEncode` and `VectorDecode` above.
 
 Encoding in this case accumulates all `k` polynomials into one large integer `r` and rejects if the most significant bit `msb(r)` is `1`.
-The resulting bitstring is padded with random bits for byte alignment.
+The unused top bits of `r` (when represented in network byte order) are randomized to ensure a fully byte-aligned random output.
 In this variant, it is no longer feasible to parallelize the encoding of the `k` polynomials; these must be treated as a single vector of `k*n` coefficients in order to achieve a reasonable rate of rejection.
 Therefore, this approach also requires arithmetic over larger integers (up to `ceil(log2(q^(4n))) = 11,982` bit integers for ML-KEM-1024, where `k = 4`).
 
@@ -354,7 +354,7 @@ Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
 
 ~~~
 Kemeleon.DecodeCtxtR(ec):
-   r,c_2 = ec # c_2 is fixed length
+   r,c_2 = ec              # c_2 is fixed length
    u = VectorDecodeR(r)
    c_1 = Compress_du(u)
    return (c_1,c_2)
