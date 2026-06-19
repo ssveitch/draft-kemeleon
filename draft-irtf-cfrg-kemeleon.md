@@ -282,7 +282,46 @@ This section contains additional considerations and comments related to using Ke
 ## Smaller Outputs from Rejection Sampling {#rejection-sampling}
 
 In applications willing to incur some probability of failure in encoding, the following variant of the encoding algorithms that result in smaller output sizes for encapsulation keys and ciphertexts can be used.
-In particular, the following algorithms can be used instead of `VectorEncode` and `VectorDecode` above.
+
+~~~
+Kemeleon.EncodeEkR(ek = (t, rho)):
+   r = VectorEncode(t)
+   return concat(r,rho)
+~~~
+
+~~~
+Kemeleon.DecodeEkR(eek):
+   r,rho = eek # rho and each r_i is fixed length
+   t = VectorDecodeR(r)
+   return (t, rho)
+~~~
+
+The encoding algorithms for encapsulation keys should handle errors accordingly, returning an error if `VectorEncodeR` returns an error.
+For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.
+
+~~~
+Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
+   u = Decompress_du(c_1)
+   for i from 1 to k*n:
+      u[i] = SamplePreimage(du,u[i],c_1[i])
+   r = VectorEncodeR(u)
+   if r == err:
+      return err
+   for i from 1 to n:
+      if c_2[i] == 0:
+         return err with prob. 1/ceil(q/(2^dv))
+   return concat(r,c_2)
+~~~
+
+~~~
+Kemeleon.DecodeCtxtR(ec):
+   r,c_2 = ec              # c_2 is fixed length
+   u = VectorDecodeR(r)
+   c_1 = Compress_du(u)
+   return (c_1,c_2)
+~~~
+
+In particular, the following algorithms `VectorEncodeR` and `VectorDecodeR` are used for vector encoding.
 
 Encoding in this case accumulates all `k` polynomials into one large integer `r` and rejects if the most significant bit `msb(r)` is `1`.
 The unused top bits of `r` (when represented in network byte order) are randomized to ensure a fully byte-aligned random output.
@@ -334,31 +373,6 @@ IntegerClearUnused(r,k):
    return r
 ~~~
 
-The encoding algorithms for public keys should handle errors accordingly, returning an error if `VectorEncode` returns an error.
-For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.
-
-~~~
-Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
-   u = Decompress_du(c_1)
-   for i from 1 to k*n:
-      u[i] = SamplePreimage(du,u[i],c_1[i])
-   r = VectorEncodeR(u)
-   if r == err:
-      return err
-   for i from 1 to n:
-      if c_2[i] == 0:
-         return err with prob. 1/ceil(q/(2^dv))
-   return concat(r,c_2)
-~~~
-
-~~~
-Kemeleon.DecodeCtxtR(ec):
-   r,c_2 = ec              # c_2 is fixed length
-   u = VectorDecodeR(r)
-   c_1 = Compress_du(u)
-   return (c_1,c_2)
-~~~
-
 This variant of the encoding is as described in the original work {{GSV24}}, and has the following properties.
 
 | Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations    |
@@ -385,7 +399,7 @@ See {{randomness-security}} for relevant discussion on keeping this randomness s
 
 ## Relation to Hash-to-Curve {#hash-to-curve}
 
-While the functionality of Kemeleon is similar to hash-to-curve {{RFC9380}} (mapping arbitrary byte strings to public keys/ciphertexts), the applications where hash-to-curve is used do not immediately follow in the KEM-based setting because having such an encapsulation key (without `dk`) or ciphertext (without `dk` or `ek`) does not appear to provide the same functionality, since it is not clear how to continue working with the element in the same way that can be done with an elliptic curve point.
+While the functionality of Kemeleon is similar to hash-to-curve {{RFC9380}} (mapping arbitrary byte strings to encapsulation keys/ciphertexts), the applications where hash-to-curve is used do not immediately follow in the KEM-based setting because having such an encapsulation key (without `dk`) or ciphertext (without `dk` or `ek`) does not appear to provide the same functionality, since it is not clear how to continue working with the element in the same way that can be done with an elliptic curve point.
 
 ## Modifying ML-KEM Algorithms {#direct-generation}
 
@@ -416,7 +430,7 @@ This section contains additional security considerations about the Kemeleon enco
 
 ## Computational Assumptions {#assumptions}
 In general, the obfuscation properties of the Kemeleon encodings depend on module LWE assumptions similar to those underlying the IND-CCA security of ML-KEM; see {{GSV24}} for the detailed security analysis of the original Kemeleon encoding.
-In particular, the notions of public key and ciphertext uniformity capture the indistinguishability of Kemeleon-encoded encapsulation keys and ciphertexts from random bitstrings, respectively.
+In particular, the notions of public/encapsulation key and ciphertext uniformity capture the indistinguishability of Kemeleon-encoded encapsulation keys and ciphertexts from random bitstrings, respectively.
 Both require the module LWE assumption to hold in order for Kemeleon to maintain its uniformity properties.
 Furthermore, distinguishing a pair of a Kemeleon-encoded encapsulation key and a Kemeleon-encoded ciphertext from uniformly random bitstrings also reduces to a module LWE assumption.
 
