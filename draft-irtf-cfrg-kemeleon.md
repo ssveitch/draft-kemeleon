@@ -296,20 +296,40 @@ VectorEncodeR(a,k):
       r += q^(i-1)*a[i]
    if msb(r) == 1:
       return err
-   b = floor(log2(q^(k*n)))  # bit size of r, without msb(r) = 0
-   for j from b to (b + (8 - (b % 8)))-1  # remaining bits up to byte-aligned
+   r = IntegerRandomizeUnused(r,k)
+   return r
+~~~
+
+~~~
+VectorDecodeR(r,k):
+   IntegerClearUnused(r,k)
+   for i from 1 to k*n:
+      a[i] = r % q
+      r = r // q
+   return a
+~~~
+
+The following helper functions randomize resp. clear the unused bits of the top byte of an integer `r` (represented in network byte order).
+
+~~~
+IntegerRandomizeUnused(r,k):
+   b = floor(log2(q^(k*n)))    # bit size of r, without msb(r) = 0
+   x = 8 - (b % 8)             # number of unused bits
+   for j from b to b + x - 1   # remaining bits up to byte-aligned
       randbit <--$ [0,1]
       r = r + (randbit << j)
    return r
 ~~~
 
 ~~~
-VectorDecodeR(r,k):
-   <<TODO>> drop random top bits
-   for i from 1 to k*n:
-      a[i] = r % q
-      r = r // q
-   return a
+IntegerClearUnused(r,k):
+   b = floor(log2(q^(k*n)))    # bit size of target integer, without msb(r) = 0
+   x = 8 - (b % 8)             # number of randomized bits
+   r_bytes = to_bytes(r)       # network byte order
+   mask = 0xFF >> x
+   r_bytes[0] = r_bytes[0] & mask
+   r = from_bytes(r_bytes)
+   return r
 ~~~
 
 The encoding algorithms for public keys should handle errors accordingly, returning an error if `VectorEncode` returns an error.
