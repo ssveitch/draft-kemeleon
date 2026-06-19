@@ -346,7 +346,7 @@ Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
    if r == err:
       return err
    for i from 1 to n:
-      if c_2[1] == 0:
+      if c_2[i] == 0:
          return err with prob. 1/ceil(q/(2^dv))
    <<TODO>> make c_2 uniform random byte-aligned
    return concat(r,c_2)
