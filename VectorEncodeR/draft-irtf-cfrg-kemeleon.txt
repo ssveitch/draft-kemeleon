@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 14 December 2026                         University of Waterloo
+Expires: 21 December 2026                         University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                            12 June 2026
+                                                            19 June 2026
 
 
                            Kemeleon Encodings
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 December 2026.
+   This Internet-Draft will expire on 21 December 2026.
 
 Copyright Notice
 
@@ -346,32 +346,52 @@ Table of Contents
 
    Encoding in this case accumulates all k polynomials into one large
    integer r and rejects if the most significant bit msb(r) is 1.  The
-   resulting bitstring is padded with random bits for byte alignment.
-   In this variant, it is no longer feasible to parallelize the encoding
-   of the k polynomials; these must be treated as a single vector of k*n
+   unused top bits of r (when represented in network byte order) are
+   randomized to ensure a fully byte-aligned random output.  In this
+   variant, it is no longer feasible to parallelize the encoding of the
+   k polynomials; these must be treated as a single vector of k*n
    coefficients in order to achieve a reasonable rate of rejection.
    Therefore, this approach also requires arithmetic over larger
    integers (up to ceil(log2(q^(4n))) = 11,982 bit integers for ML-KEM-
    1024, where k = 4).
 
-VectorEncodeR(a,k):
-   r = 0
-   for i from 1 to k*n:
-      r += q^(i-1)*a[i]
-   if msb(r) == 1:
-      return err
-   b = floor(log2(q^(k*n)))  # bit size of r, without msb(r) = 0
-   for j from b to (b + (8 - (b % 8)))-1  # remaining bits up to byte-aligned
-      randbit <--$ [0,1]
-      r = r + (randbit << j)
-   return r
+   VectorEncodeR(a,k):
+      r = 0
+      for i from 1 to k*n:
+         r += q^(i-1)*a[i]
+      if msb(r) == 1:
+         return err
+      r = IntegerRandomizeUnused(r,k)
+      return r
 
    VectorDecodeR(r,k):
-      <<TODO>> drop random top bits
+      IntegerClearUnused(r,k)
       for i from 1 to k*n:
          a[i] = r % q
          r = r // q
       return a
+
+   The following helper functions randomize resp. clear the unused bits
+   of the top byte of an integer r (represented in network byte order).
+
+   IntegerRandomizeUnused(r,k):
+      b = floor(log2(q^(k*n)))    # bit size of r, without msb(r) = 0
+      x = 8 - (b % 8)             # number of unused bits
+      r_bytes = to_bytes(r)       # network byte order
+      mask = 0xFF << (8 - x) & 0xFF
+      rand = random_byte(1)       # sample 1 byte uniformly random
+      r_bytes[0] = r_bytes[0] | (rand & mask)
+      r = from_bytes(r_bytes)
+      return r
+
+IntegerClearUnused(r,k):
+   b = floor(log2(q^(k*n)))    # bit size of target integer, without msb(r) = 0
+   x = 8 - (b % 8)             # number of randomized bits
+   r_bytes = to_bytes(r)       # network byte order
+   mask = 0xFF >> x
+   r_bytes[0] = r_bytes[0] & mask
+   r = from_bytes(r_bytes)
+   return r
 
    The encoding algorithms for public keys should handle errors
    accordingly, returning an error if VectorEncode returns an error.
@@ -387,13 +407,12 @@ VectorEncodeR(a,k):
       if r == err:
          return err
       for i from 1 to n:
-         if c_2[1] == 0:
+         if c_2[i] == 0:
             return err with prob. 1/ceil(q/(2^dv))
-      <<TODO>> make c_2 uniform random byte-aligned
       return concat(r,c_2)
 
    Kemeleon.DecodeCtxtR(ec):
-      r,c_2 = ec # c_2 is fixed length
+      r,c_2 = ec              # c_2 is fixed length
       u = VectorDecodeR(r)
       c_1 = Compress_du(u)
       return (c_1,c_2)
