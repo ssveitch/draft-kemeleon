@@ -138,7 +138,7 @@ At a high level, the constructions in this document instantiate the following fu
 ## Common Functions {#common-func}
 
 The following function maps a vector of length `n` of coefficients modulo `q` to a large integer.
-Applying the technique from {{ELL2}}, where `r` is the large integer resulting from accumulating coefficients, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^n))]`, where `b = ceil(n*log2(q))` and `t` is a security parameter, and return `r + m*q^(n)`.
+Applying the technique from (Section 3.4 {{ELL2}}), where `r` is the large integer resulting from accumulating coefficients, we then choose `m` at random from `[0,floor((2^(b+t)-r)/(q^n))]`, where `b = ceil(n*log2(q))` and `t` is a security parameter, and return `r + m*q^(n)`.
 Notably, the random value `m` need not be transmitted alongside the encoded values.
 This results in encoded values whose statistical distance from uniform is at most `2^-t`.
 Notably, this statistical distance is unconditional; we hence fix `t=128`.
