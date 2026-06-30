@@ -139,18 +139,19 @@ At a high level, the constructions in this document instantiate the following fu
 The following function `VectorEncode` maps a vector of length `n` of coefficients modulo `q` to a large integer `r` such that `r` is byte-aligned and (statistically close to) uniformly distributed.
 `VectorEncode` first accumulates the coefficients into a large integer `r` and then, applying the technique from {{ELL2}}, adds `m * q^n`,
 where `m` is chosen at random from `[0,floor((2^3072-r)/(q^n))]`.
-This results in an encoded output value byte-aligned to `384` bytes (the same size as the ML-KEM vector encoding)
+This results in an encoded output value byte-aligned to `384` bytes (the same size as the standard ML-KEM vector encoding)
 whose statistical distance from uniform is at most `2^-76`.
 
 ~~~
 VectorEncode(a):
    r = 0
-   t = 128
-   b = ceil(n*log2(q))
+   t = 76   # stat. distance from uniform and byte-aligned
+   b = 2996 # ceil(n*log2(q))
    for i from 1 to n:
       r += q^(i-1)*a[i]
    m <--$ [0,...,floor((2^(b+t)-r)/(q^(n)))]
-   return r + m*q^n
+   r = r + m*q^n
+   return r
 ~~~
 
 The following function `VectorDecode` inverts the above mapping.
