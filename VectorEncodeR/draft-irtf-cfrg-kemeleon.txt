@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 30 December 2026                         University of Waterloo
+Expires: 1 January 2027                           University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                            28 June 2026
+                                                            30 June 2026
 
 
                            Kemeleon Encodings
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 December 2026.
+   This Internet-Draft will expire on 1 January 2027.
 
 Copyright Notice
 
@@ -73,7 +73,8 @@ Table of Contents
      4.4.  Summary of Properties
    5.  Additional Considerations for Applications
      5.1.  Smaller Outputs from Rejection Sampling
-       5.1.1.  Compressing Encapsulation Keys without Rejection
+       5.1.1.  Helper Functions
+       5.1.2.  Compressing Encapsulation Keys without Rejection
                Sampling
      5.2.  Deterministic Encoding
      5.3.  Relation to Hash-to-Curve
@@ -343,10 +344,13 @@ Table of Contents
    In applications willing to incur some probability of failure in
    encoding, the following variant of the encoding algorithms that
    result in smaller output sizes for encapsulation keys and ciphertexts
-   can be used.
+   can be used.  The following algorithms make use of helper functions
+   in Section 5.1.1.  The encoding algorithms for encapsulation keys
+   should handle errors accordingly, returning an error if VectorEncodeR
+   returns an error.
 
    Kemeleon.EncodeEkR(ek = (t, rho)):
-      r = VectorEncode(t)
+      r = VectorEncodeR(t)
       return concat(r,rho)
 
    Kemeleon.DecodeEkR(eek):
@@ -354,8 +358,6 @@ Table of Contents
       t = VectorDecodeR(r)
       return (t, rho)
 
-   The encoding algorithms for encapsulation keys should handle errors
-   accordingly, returning an error if VectorEncodeR returns an error.
    For ciphertexts, the second ciphertext component need not be
    decompressed, and rejection sampling can be used to retain uniformity
    instead.
@@ -378,8 +380,29 @@ Table of Contents
       c_1 = Compress_du(u)
       return (c_1,c_2)
 
-   In particular, the following algorithms VectorEncodeR and
-   VectorDecodeR are used for vector encoding.
+   This is a byte-aligned variant of the encoding as described in the
+   original work [GSV24], and has the following properties.
+
+      +=============+=============+=============+===================+
+      | Algorithm / | Output size |     Success |        Additional |
+      | Parameter   |     (bytes) | probability |    considerations |
+      +=============+=============+=============+===================+
+      | Kemeleon -  |    ek: 781, |   ek: 0.56, |  Large int (750B) |
+      | ML-KEM-512  |   ctxt: 877 |  ctxt: 0.51 |        arithmetic |
+      +-------------+-------------+-------------+-------------------+
+      | Kemeleon -  |   ek: 1156, |   ek: 0.83, | Large int (1150B) |
+      | ML-KEM-768  |  ctxt: 1252 |  ctxt: 0.77 |        arithmetic |
+      +-------------+-------------+-------------+-------------------+
+      | Kemeleon -  |   ek: 1530, |   ek: 0.62, | Large int (1500B) |
+      | ML-KEM-1024 |  ctxt: 1658 |  ctxt: 0.57 |        arithmetic |
+      +-------------+-------------+-------------+-------------------+
+
+             Table 2: Summary of Alternate Encoding Properties
+
+5.1.1.  Helper Functions
+
+   The following algorithms VectorEncodeR and VectorDecodeR are used for
+   vector encoding.
 
    Encoding in this case accumulates all k polynomials into one large
    integer r and rejects if the most significant bit msb(r) is 1.  The
@@ -402,17 +425,19 @@ Table of Contents
       return r
 
    VectorDecodeR(r,k):
-      IntegerClearUnused(r,k)
+      r = IntegerClearUnused(r,k)
       for i from 1 to k*n:
          a[i] = r % q
          r = r // q
       return a
 
    The following helper functions randomize resp. clear the unused bits
-   of the top byte of an integer r (represented in network byte order).
+   of the top byte of an integer r (represented in network byte order)
+   produced in VectorEncodeR.
 
    IntegerRandomizeUnused(r,k):
       b = floor(log2(q^(k*n)))    # bit size of r, without msb(r) = 0
+            # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
       x = 8 - (b % 8)             # number of unused bits
       r_bytes = to_bytes(r)       # network byte order
       mask = 0xFF << (8 - x) & 0xFF
@@ -423,6 +448,7 @@ Table of Contents
 
 IntegerClearUnused(r,k):
    b = floor(log2(q^(k*n)))    # bit size of target integer, without msb(r) = 0
+         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
    x = 8 - (b % 8)             # number of randomized bits
    r_bytes = to_bytes(r)       # network byte order
    mask = 0xFF >> x
@@ -430,26 +456,7 @@ IntegerClearUnused(r,k):
    r = from_bytes(r_bytes)
    return r
 
-   This variant of the encoding is as described in the original work
-   [GSV24], and has the following properties.
-
-      +=============+=============+=============+===================+
-      | Algorithm / | Output size |     Success |        Additional |
-      | Parameter   |     (bytes) | probability |    considerations |
-      +=============+=============+=============+===================+
-      | Kemeleon -  |    ek: 781, |   ek: 0.56, |  Large int (750B) |
-      | ML-KEM-512  |   ctxt: 877 |  ctxt: 0.51 |        arithmetic |
-      +-------------+-------------+-------------+-------------------+
-      | Kemeleon -  |   ek: 1156, |   ek: 0.83, | Large int (1150B) |
-      | ML-KEM-768  |  ctxt: 1252 |  ctxt: 0.77 |        arithmetic |
-      +-------------+-------------+-------------+-------------------+
-      | Kemeleon -  |   ek: 1530, |   ek: 0.62, | Large int (1500B) |
-      | ML-KEM-1024 |  ctxt: 1658 |  ctxt: 0.57 |        arithmetic |
-      +-------------+-------------+-------------+-------------------+
-
-             Table 2: Summary of Alternate Encoding Properties
-
-5.1.1.  Compressing Encapsulation Keys without Rejection Sampling
+5.1.2.  Compressing Encapsulation Keys without Rejection Sampling
 
    Applications merely interested in compressing encapsulation keys may
    use EncodeEkR and DecodeEkR without rejection and random padding in
