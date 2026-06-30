@@ -282,10 +282,12 @@ This section contains additional considerations and comments related to using Ke
 ## Smaller Outputs from Rejection Sampling {#rejection-sampling}
 
 In applications willing to incur some probability of failure in encoding, the following variant of the encoding algorithms that result in smaller output sizes for encapsulation keys and ciphertexts can be used.
+The following algorithms make use of helper functions in {{helper-rejection}}.
+The encoding algorithms for encapsulation keys should handle errors accordingly, returning an error if `VectorEncodeR` returns an error.
 
 ~~~
 Kemeleon.EncodeEkR(ek = (t, rho)):
-   r = VectorEncode(t)
+   r = VectorEncodeR(t)
    return concat(r,rho)
 ~~~
 
@@ -296,7 +298,6 @@ Kemeleon.DecodeEkR(eek):
    return (t, rho)
 ~~~
 
-The encoding algorithms for encapsulation keys should handle errors accordingly, returning an error if `VectorEncodeR` returns an error.
 For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.
 
 ~~~
@@ -321,7 +322,19 @@ Kemeleon.DecodeCtxtR(ec):
    return (c_1,c_2)
 ~~~
 
-In particular, the following algorithms `VectorEncodeR` and `VectorDecodeR` are used for vector encoding.
+This is a byte-aligned variant of the encoding as described in the original work {{GSV24}}, and has the following properties.
+
+| Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations    |
+| :----------------------- | -------------------: | -------------------: | ------------------------:    |
+| Kemeleon - ML-KEM-512    | ek: 781, ctxt: 877   | ek: 0.56, ctxt: 0.51 | Large int (750B) arithmetic  |
+| Kemeleon - ML-KEM-768    | ek: 1156, ctxt: 1252 | ek: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
+| Kemeleon - ML-KEM-1024   | ek: 1530, ctxt: 1658 | ek: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
+{: #summary-alternate title="Summary of Alternate Encoding Properties"}
+
+
+### Helper Functions {#helper-rejection}
+
+The following algorithms `VectorEncodeR` and `VectorDecodeR` are used for vector encoding.
 
 Encoding in this case accumulates all `k` polynomials into one large integer `r` and rejects if the most significant bit `msb(r)` is `1`.
 The unused top bits of `r` (when represented in network byte order) are randomized to ensure a fully byte-aligned random output.
@@ -341,18 +354,19 @@ VectorEncodeR(a,k):
 
 ~~~
 VectorDecodeR(r,k):
-   IntegerClearUnused(r,k)
+   r = IntegerClearUnused(r,k)
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
    return a
 ~~~
 
-The following helper functions randomize resp. clear the unused bits of the top byte of an integer `r` (represented in network byte order).
+The following helper functions randomize resp. clear the unused bits of the top byte of an integer `r` (represented in network byte order) produced in `VectorEncodeR`.
 
 ~~~
 IntegerRandomizeUnused(r,k):
    b = floor(log2(q^(k*n)))    # bit size of r, without msb(r) = 0
+         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
    x = 8 - (b % 8)             # number of unused bits
    r_bytes = to_bytes(r)       # network byte order
    mask = 0xFF << (8 - x) & 0xFF
@@ -365,6 +379,7 @@ IntegerRandomizeUnused(r,k):
 ~~~
 IntegerClearUnused(r,k):
    b = floor(log2(q^(k*n)))    # bit size of target integer, without msb(r) = 0
+         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
    x = 8 - (b % 8)             # number of randomized bits
    r_bytes = to_bytes(r)       # network byte order
    mask = 0xFF >> x
@@ -372,16 +387,6 @@ IntegerClearUnused(r,k):
    r = from_bytes(r_bytes)
    return r
 ~~~
-
-This variant of the encoding is as described in the original work {{GSV24}}, and has the following properties.
-
-| Algorithm / Parameter    | Output size (bytes)  | Success probability  | Additional considerations    |
-| :----------------------- | -------------------: | -------------------: | ------------------------:    |
-| Kemeleon - ML-KEM-512    | ek: 781, ctxt: 877   | ek: 0.56, ctxt: 0.51 | Large int (750B) arithmetic  |
-| Kemeleon - ML-KEM-768    | ek: 1156, ctxt: 1252 | ek: 0.83, ctxt: 0.77 | Large int (1150B) arithmetic |
-| Kemeleon - ML-KEM-1024   | ek: 1530, ctxt: 1658 | ek: 0.62, ctxt: 0.57 | Large int (1500B) arithmetic |
-{: #summary-alternate title="Summary of Alternate Encoding Properties"}
-
 
 ### Compressing Encapsulation Keys without Rejection Sampling
 
