@@ -73,6 +73,9 @@ Table of Contents
      4.4.  Summary of Properties
    5.  Additional Considerations for Applications
      5.1.  Smaller Outputs from Rejection Sampling
+       5.1.1.  Helper Functions
+       5.1.2.  Compressing Encapsulation Keys without Rejection
+               Sampling
      5.2.  Deterministic Encoding
      5.3.  Relation to Hash-to-Curve
      5.4.  Modifying ML-KEM Algorithms
@@ -138,13 +141,16 @@ Table of Contents
 
    *  q = 3329, n = 256
 
-   *  Compress_d : x -> round((2^d/q)*x) mod 2^d (Equation 4.7)
+   *  Compress_d : x -> round((2^d/q)*x) mod 2^d (Equation 4.7
+      [FIPS203])
 
-   *  Decompress_d : y -> round((q/2^d)*y) (Equation 4.8)
+   *  Decompress_d : y -> round((q/2^d)*y) (Equation 4.8 [FIPS203])
 
-   *  remaining parameters k, d_u, d_v, etc. are defined by the
-      respective ML-KEM parameter set -- this document writes du and dv
-      in place of d_u, d_v in pseudocode
+   *  k = 2 for ML-KEM-512, k = 3 for ML-KEM-768, k = 4 for ML-KEM-1024
+
+   *  remaining parameters d_u, d_v, etc. are defined by the respective
+      ML-KEM parameter set (Table 2 [FIPS203]) -- this document writes
+      du and dv in place of d_u, d_v in pseudocode
 
    ML-KEM.KeyGen() (Section 7.1 [FIPS203]) produces an encapsulation
    key, ek and a decapsulation key, dk.  Encapsulation keys consist of
@@ -337,73 +343,126 @@ Table of Contents
 5.1.  Smaller Outputs from Rejection Sampling
 
    In applications willing to incur some probability of failure in
-   encoding, a variant of the encoding algorithm that does not add the
-   additional m value can be used.  This results in smaller output sizes
-   for public keys and ciphertexts.  However, in this case it is no
-   longer feasible to parallelize the encoding of the k polynomials;
-   these must be treated as a single vector of k*n coefficients in order
-   to achieve a reasonable rate of rejection.  Therefore, this approach
-   also requires arithmetic over larger integers (up to 1872B integers
-   for ML-KEM1024).  In particular, the following algorithms can be used
-   instead of VectorEncode and VectorDecode above.
+   encoding, the following variant of the encoding algorithms that
+   result in smaller output sizes for encapsulation keys and ciphertexts
+   can be used.  The following algorithms make use of helper functions
+   in Section 5.1.1.  The encoding algorithms for encapsulation keys
+   should handle errors accordingly, returning an error if VectorEncodeR
+   returns an error.
 
-   VectorEncode(a,k):
-      r = 0
-      for i from 1 to k*n:
-         r += q^(i-1)*a[i]
-      if msb(r) == 1:
-         return err
-      else:
-         return r
+   Kemeleon.EncodeEkR(ek = (t, rho)):
+      r = VectorEncodeR(t)
+      return concat(r,rho)
 
-   VectorDecode(r,k):
-      for i from 1 to k*n:
-         a[i] = r % q
-         r = r // q
-      return a
+   Kemeleon.DecodeEkR(eek):
+      r,rho = eek # rho and each r_i is fixed length
+      t = VectorDecodeR(r)
+      return (t, rho)
 
-   The encoding algorithms for public keys should handle errors
-   accordingly, returning an error if VectorEncode returns an error.
    For ciphertexts, the second ciphertext component need not be
    decompressed, and rejection sampling can be used to retain uniformity
    instead.
 
-   Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+   Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
       u = Decompress_du(c_1)
       for i from 1 to k*n:
          u[i] = SamplePreimage(du,u[i],c_1[i])
-      r = VectorEncode(u)
+      r = VectorEncodeR(u)
       if r == err:
          return err
       for i from 1 to n:
-         if c_2[1] == 0:
+         if c_2[i] == 0:
             return err with prob. 1/ceil(q/(2^dv))
       return concat(r,c_2)
 
-   Kemeleon.DecodeCtxt(ec):
-      r,c_2 = ec # c_2 is fixed length
-      u = VectorDecode(r)
+   Kemeleon.DecodeCtxtR(ec):
+      r,c_2 = ec              # c_2 is fixed length
+      u = VectorDecodeR(r)
       c_1 = Compress_du(u)
       return (c_1,c_2)
 
-   This variant of the encoding is as described in the original work
-   [GSV24], and has the following properties.
+   This is a byte-aligned variant of the encoding as described in the
+   original work [GSV24], and has the following properties.
 
       +=============+=============+=============+===================+
       | Algorithm / | Output size |     Success |        Additional |
       | Parameter   |     (bytes) | probability |    considerations |
       +=============+=============+=============+===================+
       | Kemeleon -  |    ek: 781, |   ek: 0.56, |  Large int (750B) |
-      | ML-KEM512   |   ctxt: 877 |  ctxt: 0.51 |        arithmetic |
+      | ML-KEM-512  |   ctxt: 877 |  ctxt: 0.51 |        arithmetic |
       +-------------+-------------+-------------+-------------------+
       | Kemeleon -  |   ek: 1156, |   ek: 0.83, | Large int (1150B) |
-      | ML-KEM768   |  ctxt: 1252 |  ctxt: 0.77 |        arithmetic |
+      | ML-KEM-768  |  ctxt: 1252 |  ctxt: 0.77 |        arithmetic |
       +-------------+-------------+-------------+-------------------+
       | Kemeleon -  |   ek: 1530, |   ek: 0.62, | Large int (1500B) |
-      | ML-KEM1024  |  ctxt: 1658 |  ctxt: 0.57 |        arithmetic |
+      | ML-KEM-1024 |  ctxt: 1658 |  ctxt: 0.57 |        arithmetic |
       +-------------+-------------+-------------+-------------------+
 
              Table 2: Summary of Alternate Encoding Properties
+
+5.1.1.  Helper Functions
+
+   The following algorithms VectorEncodeR and VectorDecodeR are used for
+   vector encoding.
+
+   Encoding in this case accumulates all k polynomials into one large
+   integer r and rejects if the most significant bit msb(r) is 1.  The
+   unused top bits of r (when represented in network byte order) are
+   randomized to ensure a fully byte-aligned random output.  In this
+   variant, it is no longer feasible to parallelize the encoding of the
+   k polynomials; these must be treated as a single vector of k*n
+   coefficients in order to achieve a reasonable rate of rejection.
+   Therefore, this approach also requires arithmetic over larger
+   integers (up to ceil(log2(q^(4n))) = 11,982 bit integers for ML-KEM-
+   1024, where k = 4).
+
+   VectorEncodeR(a,k):
+      r = 0
+      for i from 1 to k*n:
+         r += q^(i-1)*a[i]
+      if msb(r) == 1:
+         return err
+      r = IntegerRandomizeUnused(r,k)
+      return r
+
+   VectorDecodeR(r,k):
+      r = IntegerClearUnused(r,k)
+      for i from 1 to k*n:
+         a[i] = r % q
+         r = r // q
+      return a
+
+   The following helper functions randomize resp. clear the unused bits
+   of the top byte of an integer r (represented in network byte order)
+   produced in VectorEncodeR.
+
+   IntegerRandomizeUnused(r,k):
+      b = floor(log2(q^(k*n)))    # bit size of r, without msb(r) = 0
+            # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
+      x = 8 - (b % 8)             # number of unused bits
+      r_bytes = to_bytes(r)       # network byte order
+      mask = 0xFF << (8 - x) & 0xFF
+      rand = random_byte(1)       # sample 1 byte uniformly random
+      r_bytes[0] = r_bytes[0] | (rand & mask)
+      r = from_bytes(r_bytes)
+      return r
+
+IntegerClearUnused(r,k):
+   b = floor(log2(q^(k*n)))    # bit size of target integer, without msb(r) = 0
+         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
+   x = 8 - (b % 8)             # number of randomized bits
+   r_bytes = to_bytes(r)       # network byte order
+   mask = 0xFF >> x
+   r_bytes[0] = r_bytes[0] & mask
+   r = from_bytes(r_bytes)
+   return r
+
+5.1.2.  Compressing Encapsulation Keys without Rejection Sampling
+
+   Applications merely interested in compressing encapsulation keys may
+   use EncodeEkR and DecodeEkR without rejection and random padding in
+   VectorEncodeR.  The resulting encoded encapsulation keys will NOT be
+   uniformly random, but have smaller output size as in Table 2.
 
 5.2.  Deterministic Encoding
 
@@ -437,7 +496,7 @@ Table of Contents
 5.3.  Relation to Hash-to-Curve
 
    While the functionality of Kemeleon is similar to hash-to-curve
-   [RFC9380] (mapping arbitrary byte strings to public keys/
+   [RFC9380] (mapping arbitrary byte strings to encapsulation keys/
    ciphertexts), the applications where hash-to-curve is used do not
    immediately follow in the KEM-based setting because having such an
    encapsulation key (without dk) or ciphertext (without dk or ek) does
@@ -484,8 +543,8 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    depend on module LWE assumptions similar to those underlying the IND-
    CCA security of ML-KEM; see [GSV24] for the detailed security
    analysis of the original Kemeleon encoding.  In particular, the
-   notions of public key and ciphertext uniformity capture the
-   indistinguishability of Kemeleon-encoded encapsulation keys and
+   notions of public/encapsulation key and ciphertext uniformity capture
+   the indistinguishability of Kemeleon-encoded encapsulation keys and
    ciphertexts from random bitstrings, respectively.  Both require the
    module LWE assumption to hold in order for Kemeleon to maintain its
    uniformity properties.  Furthermore, distinguishing a pair of a
