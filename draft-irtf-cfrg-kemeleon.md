@@ -400,14 +400,14 @@ The resulting encoded encapsulation keys will NOT be uniformly random, but have 
 ## Deterministic Encoding {#deterministic}
 
 The randomness used in `Kemeleon` ciphertext encodings MAY be derived in a deterministic manner.
-To do so, following a call to `Encap` which returns a KEM key `K` and a ciphertext `c`, the following steps can be taken:
+To do so, following a call to `Encap` which returns a shared secret `K` and a ciphertext `c`, the following steps can be taken:
 
-- Using a key derivation function (KDF), derive from the key `K` a new key `K'` and a seed for randomness `rnd`.
+- Using a key derivation function (KDF), derive from the shared secret `K` a new shared secret `K'` and a seed for randomness `rnd`.
 - The seed `rnd` can be used to generate the randomness required when encoding the ciphertext `c`.
 - Use `K'` in place of `K` wherever applicable in the remainder of the protocol/system.
-- Upon any call to `Decap`, apply the same KDF to derive the new key `K'`, as required.
+- Upon any call to `Decap`, apply the same KDF to derive the new shared secret `K'`, as required.
 
-Deriving a new KEM key for use in the remainder of a system is crucial in order to ensure key separation (i.e., the implementation MUST NOT use the original key `K` to derive randomness and for other purposes).
+Deriving a new KEM shared secret for use in the remainder of a system is crucial in order to ensure key separation (i.e., the implementation MUST NOT use the original shared secret `K` to derive randomness and for other purposes).
 
 The randomness used to encode an encapsulation key MAY be stored alongside the corresponding decapsulation key, if it is subsequently needed.
 See {{randomness-security}} for relevant discussion on keeping this randomness secret.
