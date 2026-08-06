@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 16 January 2027                          University of Waterloo
+Expires: 7 February 2027                          University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                            15 July 2026
+                                                           6 August 2026
 
 
                            Kemeleon Encodings
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 16 January 2027.
+   This Internet-Draft will expire on 7 February 2027.
 
 Copyright Notice
 
@@ -194,7 +194,7 @@ Table of Contents
    aligned and (statistically close to) uniformly distributed.
    VectorEncode first accumulates the coefficients into a large integer
    r and then, applying the technique from [ELL2], adds m * q^n, where m
-   is chosen at random from [0,floor((2^3072-r)/(q^n))].  This results
+   is chosen at random from [0,floor((2^3072-1-r)/(q^n))].  This results
    in an encoded output value byte-aligned to 384 bytes (the same size
    as the standard ML-KEM vector encoding) whose statistical distance
    from uniform is at most 2^-76.
@@ -205,7 +205,7 @@ Table of Contents
       b = 2996 # ceil(n*log2(q))
       for i from 1 to n:
          r += q^(i-1)*a[i]
-      m <--$ [0,...,floor((2^(b+t)-r)/(q^(n)))]
+      m <--$ [0,...,floor( (2^(b+t)-1-r) / (q^(n)) )]
       r = r + m*q^n
       return r
 
