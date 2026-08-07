@@ -473,6 +473,8 @@ This document has no IANA actions.
 
 Thanks to
 {{{Michael Rosenberg}}},
-{{{John Mattsson}}}, and
-{{{Stanislaw Jarecki}}}
+{{{John Mattsson}}},
+{{{Stanislaw Jarecki}}},
+and
+{{{Afonso Arriaga}}}
 for contributions to this document and helpful discussions.
