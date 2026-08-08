@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 7 February 2027                          University of Waterloo
+Expires: 9 February 2027                          University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                           6 August 2026
+                                                           8 August 2026
 
 
                            Kemeleon Encodings
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 February 2027.
+   This Internet-Draft will expire on 9 February 2027.
 
 Copyright Notice
 
@@ -631,8 +631,9 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
 
 Acknowledgments
 
-   Thanks to Michael Rosenberg, John Mattsson, and Stanislaw Jarecki for
-   contributions to this document and helpful discussions.
+   Thanks to Michael Rosenberg, John Mattsson, Stanislaw Jarecki, and
+   Afonso Arriaga for contributions to this document and helpful
+   discussions.
 
 Authors' Addresses
 
