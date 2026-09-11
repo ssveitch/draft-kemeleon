@@ -147,7 +147,7 @@ whose statistical distance from uniform is at most `2^-76`.
 VectorEncode(a):
    r = 0
    t = 76   # stat. distance from uniform and byte-aligned
-   b = 2996 # ceil(n*log2(q))
+   b = 2996 # bit_length(q^n)
    for i from 1 to n:
       r += q^(i-1)*a[i]
    m <--$ [0,...,floor( (2^(b+t)-1-r) / (q^(n)) )]
@@ -179,7 +179,7 @@ SamplePreimage(d,u,c):
          rand <--$ [-2,-1,0,1]
       else:
          rand <--$ [-1,0,1]
-      return u + rand
+      return (u + rand) % q
    if d == 11:
       if Compress_d(u + 1) == c:
          rand <--$ [0,1]
@@ -187,7 +187,7 @@ SamplePreimage(d,u,c):
          rand <--$ [-1,0]
       else:
          rand = 0
-      return u + rand
+      return (u + rand) % q
    if d == 5:
       if u == 0:
          rand <--$ [-52,...,52]
@@ -195,7 +195,7 @@ SamplePreimage(d,u,c):
          rand <--$ [-51,...,52]
       else:
          rand <--$ [-52,...,51]
-      return u + rand
+      return (u + rand) % q
    if d == 4:
       if u == 0:
          rand <--$ [-104,...,104]
@@ -203,7 +203,7 @@ SamplePreimage(d,u,c):
          rand <--$ [-103,...,104]
       else:
          rand <--$ [-104,...,103]
-      return u + rand
+      return (u + rand) % q
    else:
       return err
 ~~~
@@ -221,13 +221,13 @@ From this, we obtain `k` values that are then concatenated.
 Kemeleon.EncodeEk(ek = (t, rho)):
    for i in range(k):
       r_i = VectorEncode(t[i])
-   r = concat(r_1,...,r_k)
+   r = concat(r_0,...,r_(k-1))
    return concat(r,rho)
 ~~~
 
 ~~~
 Kemeleon.DecodeEk(eek):
-   r_1,..,r_k,rho = eek # rho and each r_i is fixed length
+   r_0,...,r_(k-1),rho = eek # rho and each r_i is fixed length
    t = []
    for i in range(k):
       t_i = VectorDecode(r_i)
@@ -250,19 +250,19 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
    v = Decompress_dv(c_2)
    for i from 1 to n:
       v[i] = SamplePreimage(dv,v[i],c_2[i])
-   for i in range(k)
+   for i in range(k):
       r_i = VectorEncode(u[i])
-   r_(k+1) = VectorEncode(v)
-   r = concat(r_0,...,r_(k+1))
+   r_k = VectorEncode(v)
+   r = concat(r_0,...,r_k)
    return r
 ~~~
 
 ~~~
 Kemeleon.DecodeCtxt(r):
-   r_0,...,r_(k+1) = r # each r_i is fixed length
+   r_0,...,r_k = r # each r_i is fixed length
    for i in range(k):
       u[i] = VectorDecode(r_i)
-   v = VectorDecode(r_(k+1))
+   v = VectorDecode(r_k)
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
    return (c_1,c_2)
@@ -284,19 +284,19 @@ This section contains additional considerations and comments related to using Ke
 ## Smaller Outputs from Rejection Sampling {#rejection-sampling}
 
 In applications willing to incur some probability of failure in encoding, the following variant of the encoding algorithms that result in smaller output sizes for encapsulation keys and ciphertexts can be used.
-The following algorithms make use of helper functions in {{helper-rejection}}.
+The following algorithms make use of `VectorEncodeR` and `VectorDecodeR`, defined in {{helper-rejection}}.
 The encoding algorithms for encapsulation keys should handle errors accordingly, returning an error if `VectorEncodeR` returns an error.
 
 ~~~
 Kemeleon.EncodeEkR(ek = (t, rho)):
-   r = VectorEncodeR(t)
+   r = VectorEncodeR(t,k)
    return concat(r,rho)
 ~~~
 
 ~~~
 Kemeleon.DecodeEkR(eek):
    r,rho = eek # rho and each r_i is fixed length
-   t = VectorDecodeR(r)
+   t = VectorDecodeR(r,k)
    return (t, rho)
 ~~~
 
@@ -307,7 +307,7 @@ Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
-   r = VectorEncodeR(u)
+   r = VectorEncodeR(u,k)
    if r == err:
       return err
    for i from 1 to n:
@@ -319,7 +319,7 @@ Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
 ~~~
 Kemeleon.DecodeCtxtR(ec):
    r,c_2 = ec              # c_2 is fixed length
-   u = VectorDecodeR(r)
+   u = VectorDecodeR(r,k)
    c_1 = Compress_du(u)
    return (c_1,c_2)
 ~~~
@@ -334,67 +334,46 @@ This is a byte-aligned variant of the encoding as described in the original work
 {: #summary-alternate title="Summary of Alternate Encoding Properties"}
 
 
-### Helper Functions {#helper-rejection}
+### Vector Encoding with Rejection Sampling {#helper-rejection}
 
 The following algorithms `VectorEncodeR` and `VectorDecodeR` are used for vector encoding.
 
 Encoding in this case accumulates all `k` polynomials into one large integer `r` and rejects if the most significant bit `msb(r)` is `1`.
 The unused top bits of `r` (when represented in network byte order) are randomized to ensure a fully byte-aligned random output.
 In this variant, it is no longer feasible to parallelize the encoding of the `k` polynomials; these must be treated as a single vector of `k*n` coefficients in order to achieve a reasonable rate of rejection.
-Therefore, this approach also requires arithmetic over larger integers (up to `ceil(log2(q^(4n))) = 11,982` bit integers for ML-KEM-1024, where `k = 4`).
+Therefore, this approach also requires arithmetic over larger integers (up to `bit_length(q^(4n)) = 11,982` bit integers for ML-KEM-1024).
 
 ~~~
 VectorEncodeR(a,k):
    r = 0
    for i from 1 to k*n:
       r += q^(i-1)*a[i]
+   b = bit_length(q^(k*n))     # bit length of r
+         # b=5991 if k=2, b=8987 if k=3, b=11982 if k=4
    if msb(r) == 1:
       return err
-   r = IntegerRandomizeUnused(r,k)
+   B = ceil(b/8)                # byte-aligned size of r, in bytes
+   x = B*8 - b + 1              # number of unused bits
+   rand <--$ [0,...,2^x - 1]
+   r = r | (rand << (b-1))      # randomize unused bits
    return r
 ~~~
 
 ~~~
 VectorDecodeR(r,k):
-   r = IntegerClearUnused(r,k)
+   b = bit_length(q^(k*n))     # bit length of r
+         # b=5991 if k=2, b=8987 if k=3, b=11982 if k=4
+   r = r & (2^(b-1) - 1)        # clear unused bits
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
    return a
 ~~~
 
-The following helper functions randomize resp. clear the unused bits of the top byte of an integer `r` (represented in network byte order) produced in `VectorEncodeR`.
-
-~~~
-IntegerRandomizeUnused(r,k):
-   b = floor(log2(q^(k*n)))    # bit size of r, without msb(r) = 0
-         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   x = 8 - (b % 8)             # number of unused bits
-   r_bytes = to_bytes(r)       # network byte order
-   mask = 0xFF << (8 - x) & 0xFF
-   rand = random_byte(1)       # sample 1 byte uniformly random
-   r_bytes[0] = r_bytes[0] | (rand & mask)
-   r = from_bytes(r_bytes)
-   return r
-~~~
-
-~~~
-IntegerClearUnused(r,k):
-   b = floor(log2(q^(k*n)))    # bit size of target integer, without msb(r) = 0
-         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   x = 8 - (b % 8)             # number of randomized bits
-   r_bytes = to_bytes(r)       # network byte order
-   mask = 0xFF >> x
-   r_bytes[0] = r_bytes[0] & mask
-   r = from_bytes(r_bytes)
-   return r
-~~~
-
 ### Compressing Encapsulation Keys without Rejection Sampling
 
 Applications merely interested in compressing encapsulation keys may use `EncodeEkR` and `DecodeEkR` without rejection and random padding in `VectorEncodeR`.
 The resulting encoded encapsulation keys will NOT be uniformly random, but have smaller output size as in {{summary-alternate}}.
-
 
 
 ## Deterministic Encoding {#deterministic}
@@ -425,8 +404,10 @@ In this case, the Kemeleon encoding algorithm for ciphertexts would omit the `De
 
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
-   w = [c_1,c_2] # treat c_1,c_2 as a singular vector of (k+1)*n coefficients
-   r = VectorEncode(w,k+1)
+   w = [c_1[1],...,c_1[k],c_2]
+   for i in range(k+1):
+      r_i = VectorEncode(w[i])
+   r = concat(r_0,...,r_k)
    return r
 ~~~
 
@@ -434,8 +415,11 @@ Decoding is adapted analogously.
 
 ~~~
 Kemeleon.DecodeCtxt(ec):
-   w = VectorDecode(r,k+1)
-   c_1,c_2 = w # c_1, c_2 are fixed length
+   r_0,...,r_k = ec # each r_i is fixed length
+   for i in range(k+1):
+      w[i] = VectorDecode(r_i)
+   c_1 = [w[0],...,w[k-1]]
+   c_2 = w[k]
    return (c_1,c_2)
 ~~~
 
