@@ -430,9 +430,9 @@ While the functionality of Kemeleon is similar to hash-to-curve {{RFC9380}} (map
 ## Modifying ML-KEM Algorithms {#direct-generation}
 
 In applications that _only_ require Kemeleon-encoded values _and_ where the underlying ML-KEM implementation can be modified, the ciphertext encoding algorithm (and ML-KEM encapsulation/decapsulation algorithms) MAY be adapted as follows for improved efficiency.
-In particular, the compression step in the ML-KEM encapsulation algorithm can be omitted, and therefore, the decompression step in the Kemeleon algorithm can be omitted.
-In the implementation of ML-KEM, the compression step (lines 22-23 of Algorithm 14 {{FIPS203}}) and corresponding decompression step (lines 3-4 of Algorithm 15 {{FIPS203}}) can be omitted from the encapsulation/decapsulation algorithms in ML-KEM.
-In this case, the Kemeleon encoding algorithm for ciphertexts would omit the `Decompress` and `SamplePreimage` steps and immediately apply `VectorEncode`:
+In particular, the compression and byte-encoding steps in the ML-KEM encapsulation algorithm can be omitted, and therefore, the byte-decoding and decompression step in the Kemeleon algorithm can be omitted.
+In the implementation of ML-KEM, the compression and byte-encoding step (lines 22-23 of Algorithm 14 {{FIPS203}}) and corresponding byte-decoding and decompression step (lines 3-4 of Algorithm 15 {{FIPS203}}) can be omitted from the encapsulation/decapsulation algorithms in ML-KEM.
+In this case, the Kemeleon encoding algorithm for ciphertexts omits the `ByteDecode`, `Decompress`, and `SamplePreimage` steps and immediately applies `VectorEncode`:
 
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
@@ -449,6 +449,9 @@ Kemeleon.DecodeCtxt(ec):
    c_1,c_2 = w # c_1, c_2 are fixed length
    return (c_1,c_2)
 ~~~
+
+The same applies to encapsulation keys, which are byte-encoded but not compressed: a modified `KeyGen` that exposes `t` directly lets `EncodeEk` skip `ByteDecode_12` and `DecodeEk` skip `ByteEncode_12`.
+However, `ByteEncode_12` cannot be dropped entirely in `KeyGen` itself, as its output is used to compute `H(ek)` for the Fujisaki-Okamoto transform (Algorithms 16-18 {{FIPS203}}).
 
 # Security Considerations {#security}
 
