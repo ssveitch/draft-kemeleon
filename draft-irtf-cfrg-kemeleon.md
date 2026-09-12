@@ -245,9 +245,12 @@ ML-KEM ciphertexts consist of two components: `c_1`, a vector of `k` polynomials
 The coefficients of these polynomials are not uniformly distributed, as a result of the compression step in encapsulation.
 The following encoding function decompresses and recovers a random preimage of this compression step in order to recover the uniform distribution of coefficients.
 Then, the same vector encoding step used for encapsulation keys can be applied.
+The two components `c_1` and `c_2` are byte-encoded in the ciphertext, via `ByteEncode_du` and `ByteEncode_dv`, respectively, meaning these must first be decoded using `ByteDecode_du` and `ByteDecode_dv` before the polynomial coefficients can be decompressed.
 
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+   c_1 = ByteDecode_du(c_1)
+   c_2 = ByteDecode_dv(c_2)
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
@@ -269,7 +272,7 @@ Kemeleon.DecodeCtxt(r):
    v = VectorDecode(r_(k+1))
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
-   return (c_1,c_2)
+   return (ByteEncode_du(c_1), ByteEncode_dv(c_2))
 ~~~
 
 ## Summary of Properties {#properties}
@@ -293,6 +296,7 @@ The encoding algorithms for encapsulation keys should handle errors accordingly,
 
 ~~~
 Kemeleon.EncodeEkR(ek = (t, rho)):
+   t = ByteDecode_12(t)
    r = VectorEncodeR(t)
    return concat(r,rho)
 ~~~
@@ -301,21 +305,24 @@ Kemeleon.EncodeEkR(ek = (t, rho)):
 Kemeleon.DecodeEkR(eek):
    r,rho = eek # rho and each r_i is fixed length
    t = VectorDecodeR(r)
-   return (t, rho)
+   return (ByteEncode_12(t), rho)
 ~~~
 
+Both ciphertext components must first be decoded with `ByteDecode_du` and `ByteDecode_dv`.
 For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.
 
 ~~~
 Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
+   c_1 = ByteDecode_du(c_1)
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
    r = VectorEncodeR(u)
    if r == err:
       return err
+   a = ByteDecode_dv(c_2)
    for i from 1 to n:
-      if c_2[i] == 0:
+      if a[i] == 0:
          return err with prob. 1/ceil(q/(2^dv))
    return concat(r,c_2)
 ~~~
@@ -325,7 +332,7 @@ Kemeleon.DecodeCtxtR(ec):
    r,c_2 = ec              # c_2 is fixed length
    u = VectorDecodeR(r)
    c_1 = Compress_du(u)
-   return (c_1,c_2)
+   return (ByteEncode_du(c_1),c_2)
 ~~~
 
 This is a byte-aligned variant of the encoding as described in the original work {{GSV24}}, and has the following properties.
