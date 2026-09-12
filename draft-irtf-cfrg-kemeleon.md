@@ -114,6 +114,8 @@ The following variables and functions are adopted from {{FIPS203}}:
 - `q = 3329`, `n = 256`
 - `Compress_d : x -> round((2^d/q)*x) mod 2^d` (Equation 4.7 {{FIPS203}})
 - `Decompress_d : y -> round((q/2^d)*y)` (Equation 4.8 {{FIPS203}})
+- `ByteEncode_d`: encode a vector of coefficients into a byte string using `d` bits per coefficient (Algorithm 5 {{FIPS203}})
+- `ByteDecode_d`: decode a byte string into a vector of coefficients using `d` bits per coefficient (Algorithm 6 {{FIPS203}})
 - `k = 2` for ML-KEM-512, `k = 3` for ML-KEM-768, `k = 4` for ML-KEM-1024
 - remaining parameters `d_u`, `d_v`, etc. are defined by the respective ML-KEM parameter set (Table 2 {{FIPS203}}) -- this document writes `du` and `dv` in place of `d_u`, `d_v` in pseudocode
 
@@ -214,11 +216,13 @@ The following algorithms encode ML-KEM encapsulation keys as random bytestrings.
 `rho` is the public seed used to generate the public matrix `A` {{FIPS203}}.
 This is already a random 32-byte string, so it is returned alongside the encoded value of `t`.
 `t` is a vector of `k` polynomials with `n` coefficients.
-We treat each polynomial in `t` as a vector of `n` coefficient, for which we apply `VectorEncode`.
+In an encapsulation key `ek`, the vector `t` is byte-encoded via `ByteEncode_12` {{FIPS203}}, meaning the polynomial coefficients must first be recovered by applying `ByteDecode_12`.
+We treat each polynomial in the resulting `t` as a vector of `n` coefficient, for which we apply `VectorEncode`.
 From this, we obtain `k` values that are then concatenated.
 
 ~~~
 Kemeleon.EncodeEk(ek = (t, rho)):
+   t = ByteDecode_12(t)
    for i in range(k):
       r_i = VectorEncode(t[i])
    r = concat(r_1,...,r_k)
@@ -232,7 +236,7 @@ Kemeleon.DecodeEk(eek):
    for i in range(k):
       t_i = VectorDecode(r_i)
       t.append(t_i)
-   return (t, rho)
+   return (ByteEncode_12(t), rho)
 ~~~
 
 ## Encoding Ciphertexts {#ctxt-encoding}
