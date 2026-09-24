@@ -142,6 +142,7 @@ The following function `VectorEncode` maps a vector of length `n` of coefficient
 where `m` is chosen at random from `[0,floor((2^3072-1-r)/(q^n))]`.
 This results in an encoded output value byte-aligned to `384` bytes (the same size as the standard ML-KEM vector encoding)
 whose statistical distance from uniform is at most `2^-76`.
+Users MAY set the statistical-distance parameter `t` to `t = 76 + 8x` for a positive integer x to obtain a smaller statistical distance.
 
 ~~~
 VectorEncode(a):
