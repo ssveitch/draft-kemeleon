@@ -5,10 +5,10 @@
 Network Working Group                                         F. Günther
 Internet-Draft                              IBM Research Europe - Zurich
 Intended status: Informational                                D. Stebila
-Expires: 15 March 2027                            University of Waterloo
+Expires: 25 April 2027                            University of Waterloo
                                                                S. Veitch
                                                               ETH Zurich
-                                                       11 September 2026
+                                                         22 October 2026
 
 
                            Kemeleon Encodings
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 15 March 2027.
+   This Internet-Draft will expire on 25 April 2027.
 
 Copyright Notice
 
@@ -416,24 +416,24 @@ Table of Contents
    integers (up to bit_length(q^(4n)) = 11,982 bit integers for ML-KEM-
    1024).
 
-   VectorEncodeR(a,k):
-      r = 0
-      for i from 1 to k*n:
-         r += q^(i-1)*a[i]
-      b = bit_length(q^(k*n))     # bit length of r
-            # b=5991 if k=2, b=8987 if k=3, b=11982 if k=4
-      if msb(r) == 1:
-         return err
-      B = ceil(b/8)                # byte-aligned size of r, in bytes
-      x = B*8 - b + 1              # number of unused bits
-      rand <--$ [0,...,2^x - 1]
-      r = r | (rand << (b-1))      # randomize unused bits
-      return r
+  VectorEncodeR(a,k):
+     r = 0
+     for i from 1 to k*n:
+        r += q^(i-1)*a[i]
+     if msb(r) == 1:
+        return err
+      b = bit_length(q^(k*n)) - 1    # bit length of r, after acceptance
+           # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
+     B = ceil(b/8)                # byte-aligned size of r, in bytes
+     x = B*8 - b                  # number of unused bits
+     rand <--$ [0,...,2^x - 1]
+     r = r | (rand << b)          # randomize unused bits
+     return r
 
    VectorDecodeR(r,k):
       b = bit_length(q^(k*n))     # bit length of r
             # b=5991 if k=2, b=8987 if k=3, b=11982 if k=4
-      r = r & (2^(b-1) - 1)        # clear unused bits
+      r = r & (2^b - 1)            # clear unused bits
       for i from 1 to k*n:
          a[i] = r % q
          r = r // q
