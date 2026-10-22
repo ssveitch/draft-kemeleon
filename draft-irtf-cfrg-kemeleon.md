@@ -348,14 +348,14 @@ VectorEncodeR(a,k):
    r = 0
    for i from 1 to k*n:
       r += q^(i-1)*a[i]
-   b = bit_length(q^(k*n))     # bit length of r
-         # b=5991 if k=2, b=8987 if k=3, b=11982 if k=4
    if msb(r) == 1:
       return err
+    b = bit_length(q^(k*n)) - 1    # bit length of r, after acceptance
+         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
    B = ceil(b/8)                # byte-aligned size of r, in bytes
-   x = B*8 - b + 1              # number of unused bits
+   x = B*8 - b                  # number of unused bits
    rand <--$ [0,...,2^x - 1]
-   r = r | (rand << (b-1))      # randomize unused bits
+   r = r | (rand << b)          # randomize unused bits
    return r
 ~~~
 
@@ -363,7 +363,7 @@ VectorEncodeR(a,k):
 VectorDecodeR(r,k):
    b = bit_length(q^(k*n))     # bit length of r
          # b=5991 if k=2, b=8987 if k=3, b=11982 if k=4
-   r = r & (2^(b-1) - 1)        # clear unused bits
+   r = r & (2^b - 1)            # clear unused bits
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
