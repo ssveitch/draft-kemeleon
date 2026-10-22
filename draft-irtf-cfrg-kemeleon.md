@@ -404,7 +404,7 @@ In this case, the Kemeleon encoding algorithm for ciphertexts would omit the `De
 
 ~~~
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
-   w = [c_1[1],...,c_1[k],c_2]
+   w = [c_1[0],...,c_1[k-1],c_2]
    for i in range(k+1):
       r_i = VectorEncode(w[i])
    r = concat(r_0,...,r_k)
