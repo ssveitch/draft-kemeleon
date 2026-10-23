@@ -86,7 +86,7 @@ Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, re
 
 # Introduction {#intro}
 
-ML-KEM {{FIPS203}} is a post-quantum key-encapsulation mechanism (KEM) recently standardized by NIST,
+ML-KEM {{FIPS203}} is a post-quantum key-encapsulation mechanism (KEM) recently standardized by NIST.
 Many applications are transitioning from classical Diffie-Hellman (DH) based solutions to constructions based on ML-KEM.
 The use of Elligator and related Hash-to-Curve {{RFC9380}} algorithms are ubiquitous in DH-based protocols where DH shares are required to be encoded as, and look indistinguishable from, random bytestrings.
 For example, applications using Elligator include protocols used for censorship circumvention in Tor {{OBFS4}}, password-authenticated key exchange (PAKE) protocols {{?CPACE=I-D.irtf-cfrg-cpace}} {{?OPAQUE=I-D.irtf-cfrg-opaque}}, and private set intersection (PSI) {{?ECDH-PSI=I-D.ecdh-psi}}.
@@ -106,7 +106,7 @@ This document specifies a version of the Kemeleon encoding that avoids any failu
 A KEM consists of three algorithms:
 
 - `KeyGen() -> (ek, dk)`: A probabilistic key generation algorithm that, with no input, generates an encapsulation key `ek` and a decapsulation key `dk`.
-- `Encaps(ek) -> (c, K)`: A probabilistic encapsulation algorithm that takes as input an encapsulation key `ek`, and outputs a ciphertext `ct` and shared secret `K`.
+- `Encaps(ek) -> (c, K)`: A probabilistic encapsulation algorithm that takes as input an encapsulation key `ek`, and outputs a ciphertext `c` and shared secret `K`.
 - `Decaps(dk, c) -> K`: A decapsulation algorithm that takes as input a decapsulation key `dk` and ciphertext `c`, and outputs a shared secret `K`.
 
 The following variables and functions are adopted from {{FIPS203}}:
@@ -121,12 +121,13 @@ The following variables and functions are adopted from {{FIPS203}}:
 
 `ML-KEM.KeyGen()` (Section 7.1 {{FIPS203}}) produces an encapsulation key, `ek` and a decapsulation key, `dk`.
 Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix `A`.
-`ML-KEM.Encaps(ek)` (Section 7.2 {{FIPS203}}) produces ciphertexts consisting of byte-encoded compressed vectors of cofficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).
+`ML-KEM.Encaps(ek)` (Section 7.2 {{FIPS203}}) produces ciphertexts consisting of byte-encoded compressed vectors of coefficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).
 
 The following terms and notation are used throughout this document:
 
-- `a[i]` denotes the `i`th position of a vector `a` of coefficients
+- `a[i]` denotes the `i`th position of a vector `a` of coefficients.
 - `concat(x0, ..., xN)`: returns the concatenation of bytestrings.
+- `to_bytes(x,L)` and `from_bytes(y)` encode/decode an integer `x` to a bytestring `y` of length `L` bytes in little-endian order.
 
 # Kemeleon Encoding {#kemeleon}
 
@@ -141,7 +142,7 @@ At a high level, the constructions in this document instantiate the following fu
 
 The following function `VectorEncode` maps a vector of length `n` of coefficients modulo `q` to a large integer `r` such that `r` is byte-aligned and (statistically close to) uniformly distributed.
 `VectorEncode` first accumulates the coefficients into a large integer `r` and then, applying the technique from {{ELL2}}, adds `m * q^n`,
-where `m` is chosen at random from `[0,floor((2^3072-1-r)/(q^n))]`.
+where `m` is chosen at random from `[0,floor((2^(b+t)-1-r)/(q^n))]`.
 This results in an encoded output value byte-aligned to `384` bytes (the same size as the standard ML-KEM vector encoding)
 whose statistical distance from uniform is at most `2^-76`.
 Users MAY set the statistical-distance parameter `t` to `t = 76 + 8x` for a positive integer x to obtain a smaller statistical distance.
@@ -155,13 +156,14 @@ VectorEncode(a):
       r += q^(i-1)*a[i]
    m <--$ [0,...,floor( (2^(b+t)-1-r) / (q^(n)) )]
    r = r + m*q^n
-   return r
+   return to_bytes(r,(b+t)/8) # little endian, (b+t)/8 bytes
 ~~~
 
 The following function `VectorDecode` inverts the above mapping.
 
 ~~~
 VectorDecode(r):
+   r = from_bytes(r) # little endian
    r = r % q^n
    for i from 1 to n:
       a[i] = r % q
@@ -218,7 +220,7 @@ The following algorithms encode ML-KEM encapsulation keys as random bytestrings.
 This is already a random 32-byte string, so it is returned alongside the encoded value of `t`.
 `t` is a vector of `k` polynomials with `n` coefficients.
 In an encapsulation key `ek`, the vector `t` is byte-encoded via `ByteEncode_12` {{FIPS203}}, meaning the polynomial coefficients must first be recovered by applying `ByteDecode_12`.
-We treat each polynomial in the resulting `t` as a vector of `n` coefficient, for which we apply `VectorEncode`.
+We treat each polynomial in the resulting `t` as a vector of `n` coefficients, for which we apply `VectorEncode`.
 From this, we obtain `k` values that are then concatenated.
 
 ~~~
@@ -238,7 +240,7 @@ Kemeleon.DecodeEk(eek):
    for i in range(k):
       t_i = VectorDecode(r_i)
       t.append(t_i)
-   return (ByteEncode_12(t), rho)
+   return concat(ByteEncode_12(t), rho)
 ~~~
 
 ## Encoding Ciphertexts {#ctxt-encoding}
@@ -267,14 +269,14 @@ Kemeleon.EncodeCtxt(c):
 ~~~
 
 ~~~
-Kemeleon.DecodeCtxt(r):
-   r_0,...,r_k = r # each r_i is fixed length
+Kemeleon.DecodeCtxt(ec):
+   r_0,...,r_k = ec # each r_i is fixed length
    for i in range(k):
       u[i] = VectorDecode(r_i)
    v = VectorDecode(r_k)
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
-   return (ByteEncode_du(c_1), ByteEncode_dv(c_2))
+   return concat(ByteEncode_du(c_1), ByteEncode_dv(c_2))
 ~~~
 
 ## Summary of Properties {#properties}
@@ -306,9 +308,9 @@ Kemeleon.EncodeEkR(ek):
 
 ~~~
 Kemeleon.DecodeEkR(eek):
-   r,rho = eek # rho and each r_i is fixed length
+   r,rho = eek # rho is fixed length
    t = VectorDecodeR(r,k)
-   return (ByteEncode_12(t), rho)
+   return concat(ByteEncode_12(t), rho)
 ~~~
 
 Both ciphertext components must first be decoded with `ByteDecode_du` and `ByteDecode_dv`.
@@ -336,7 +338,7 @@ Kemeleon.DecodeCtxtR(ec):
    r,c_2 = ec              # c_2 is fixed length
    u = VectorDecodeR(r,k)
    c_1 = Compress_du(u)
-   return (ByteEncode_du(c_1),c_2)
+   return concat(ByteEncode_du(c_1),c_2)
 ~~~
 
 This is a byte-aligned variant of the encoding as described in the original work {{GSV24}}, and has the following properties.
@@ -354,7 +356,7 @@ This is a byte-aligned variant of the encoding as described in the original work
 The following algorithms `VectorEncodeR` and `VectorDecodeR` are used for vector encoding.
 
 Encoding in this case accumulates all `k` polynomials into one large integer `r` and rejects if the most significant bit `msb(r)` is `1`.
-The unused top bits of `r` (when represented in network byte order) are randomized to ensure a fully byte-aligned random output.
+The unused most significant bits of `r` are randomized to ensure a fully byte-aligned random output.
 In this variant, it is no longer feasible to parallelize the encoding of the `k` polynomials; these must be treated as a single vector of `k*n` coefficients in order to achieve a reasonable rate of rejection.
 Therefore, this approach also requires arithmetic over larger integers (up to `bit_length(q^(4n)) = 11,982` bit integers for ML-KEM-1024).
 
@@ -365,20 +367,21 @@ VectorEncodeR(a,k):
       r += q^(i-1)*a[i]
    if msb(r) == 1:
       return err
-    b = bit_length(q^(k*n)) - 1    # bit length of r, after acceptance
+   b = bit_length(q^(k*n)) - 1   # bit length of r, after acceptance
          # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
    B = ceil(b/8)                # byte-aligned size of r, in bytes
    x = B*8 - b                  # number of unused bits
    rand <--$ [0,...,2^x - 1]
    r = r | (rand << b)          # randomize unused bits
-   return r
+   return to_bytes(r,B)         # little endian, B bytes
 ~~~
 
 ~~~
 VectorDecodeR(r,k):
-   b = bit_length(q^(k*n)) - 1    # bit length of r
+   b = bit_length(q^(k*n)) - 1   # bit length of r after clearing unused bits
          # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   r = r & (2^b - 1)            # clear unused bits
+   r = from_bytes(r)             # little endian
+   r = r & (2^b - 1)             # clear unused bits
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
@@ -477,6 +480,9 @@ Thanks to
 {{{Michael Rosenberg}}},
 {{{John Mattsson}}},
 {{{Stanislaw Jarecki}}},
+{{{Afonso Arriaga}}},
+{{{Dan Harkins}}},
+{{{Jelle Vos}}},
 and
-{{{Afonso Arriaga}}}
+{{{Mathy Vanhoef}}}
 for contributions to this document and helpful discussions.
