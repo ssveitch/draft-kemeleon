@@ -77,6 +77,14 @@ informative:
     title: obfs4 (The obfourscator)
     target: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird/-/blob/HEAD/doc/obfs4-spec.txt
 
+   CTMUL:
+    title: "Constant-Time Mul"
+    target: https://www.bearssl.org/ctmul.html
+    author:
+      - ins: T. Pornin
+        name: Thomas Pornin
+    date: false
+
 --- abstract
 
 This document specifies Kemeleon encoding algorithms for encoding ML-KEM encapsulation keys and ciphertexts as random bytestrings.
@@ -168,6 +176,8 @@ VectorDecode(r):
       r = r // q
    return a
 ~~~
+
+See {{timing-security}} for equivalent implementations of `VectorEncode` and `VectorDecode` that run in constant time with respect to their input values.
 
 The following algorithm `SamplePreimage` samples an uncompressed pre-image of a coefficient `c` at random, where `u` is the decompressed value of `c`.
 It must take as input values of `u` that are output from `Decompress_d`.
@@ -459,8 +469,75 @@ Decoding the value in question and re-encoding it with the public randomness wil
 
 ## Timing Side-Channels {#timing-security}
 Beyond timing side-channel considerations for ML-KEM itself, care should be taken when using Kemeleon encodings.
-Algorithms required to perform large integer arithmetic may leak information via timing.
+In particular, several operations may leak information via timing, such as large integer arithmetic and sampling random numbers from a non-public bound.
 Additionally, rejecting and re-generating encapsulation keys or ciphertexts may leak information about the use of Kemeleon encodings, as might the overhead of the encoding itself.
+
+Timing leakage in the encoding of encapsulation keys can be especially problematic because some use cases require the encapsulation key to remain secret.
+For instance, certain password-authenticated key exchange protocols encrypt an encoding of the encapsulation key, and leaking information about the encrypted encapsulation key reveals information about the password {{?TEMPO=DOI.10.46586/tches.v2026.i3.744-768}}.
+
+### Constant-Time Vector Encoding {#ct-vector-encode}
+
+An efficient constant-time implementation that is equivalent to `VectorEncode` is the following:
+
+~~~
+# Public constants, precomputed:
+#   t    = 76                        # stat. distance and byte alignment
+#   b    = 2996                      # ceil(n*log2(q))
+#   M_hi = floor(2^(b+t) / q^n)
+#   s    = 2^(b+t) mod q^n
+VectorEncodeCT(a):
+   r = 0
+   for i from n down to 1:
+      r = r*q + a[i]                 # Horner's rule, results in same r as VectorEncode
+   m_hi <--$ [0,...,M_hi]
+   m_lo <--$ [0,...,M_hi-1]
+   m = CTSelect(r < s, m_hi, m_lo)   # constant-time comparison and select
+   r = r + m*q^n
+   return r
+~~~
+
+Here, `CTSelect(c, x, y)` returns `x` if the condition `c` is true and `y` otherwise, without branching on `c`.
+To fully prevent leaking information about `a`, an implementation SHOULD also:
+
+- Use fixed-width integers with branch-free operations for addition, multiplication, and comparison.
+
+- On platforms where multiplication instructions themselves do not run in constant time, this must be taken into account {{CTMUL}}.
+  Note that the same consideration also applies to implementations of ML-KEM itself.
+
+The random number generator does not need to run in constant time.
+For instance, rejection sampling may be used by the random number generation, since the two upper bounds `M_hi` and `M_hi-1` are both public and always sampled.
+The following optimizations are possible while still ensuring constant-time code:
+
+- The width of the fixed-width integers can grow with each iteration.
+  Specifically, the `j`-th iteration (starting at `j = 1`) can use integers of `12*j` bits, since in the `j`-th iteration it holds that `r < q^j < 2^(12*j)`.
+
+- On 32-bit platforms, it may be more efficient to process two coefficients per iteration instead of one, since `q^2 < 2^24`.
+  The two coefficients are first combined into `temp = q*a[i] + a[i-1]`, and then `r = r*q^2 + temp` is computed.
+  This reduces the number of passes that are made over the larger integer `r`.
+  On 64-bit platforms, it may even be more efficient to process five coefficients at once, since `q^5 < 2^60`.
+
+### Constant-Time Vector Decoding {#ct-vector-decode}
+
+To prevent leaking information about `a`, an implementation of `VectorDecode` SHOULD:
+
+- Use fixed-width integers with branch-free operations.
+
+- Replace the division and modulo by `q` with a multiply by a precomputed reciprocal of `q`, and then computing the remainder as `r − q·quotient`.
+  For this, implementations can use Barrett reduction with a branch-free correction step, or a round-up reciprocal using Granlund–Montgomery that gives the exact quotient with no correction {{?DIVCONST=DOI.10.1145/178243.178249}}.
+
+The following optimizations are possible while still ensuring constant-time code:
+
+- Similar to `VectorEncodeCT`, the considered width of the fixed-width integers can decrease in each iteration.
+  Specifically, iteration `j` (starting at `j = 0`) can use integers of `b − 11*j` bits, since each iteration shrinks `r` by at least 11 bits because `q > 2^11`.
+
+- As a further optimization, two coefficients can be extracted in each iteration by dividing by `q^2` and splitting the resulting remainder into its two base-`q` digits using single-word divisions by `q`.
+  These divisions should be implemented by multiplying with a precomputed reciprocal to avoid leaking information about `r`.
+
+### Rejection Sampling Variant {#ct-rejection}
+
+When using `EncodeEkR` and `DecodeEkR`, the outcome of the check `msb(r) == 1` in `VectorEncodeR` will inherently be observable.
+This can reveal that a rejection occurred, and may thereby reveal the use of Kemeleon encodings.
+Nevertheless, with a constant-time implementation of `VectorEncodeR` and `VectorDecodeR` using the same techniques as in `VectorEncode` and `VectorDecode`, no information is leaked about a fresh encapsulation key that satisfies `msb(r) == 0`.
 
 # IANA Considerations
 
