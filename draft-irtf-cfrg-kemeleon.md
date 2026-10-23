@@ -106,7 +106,7 @@ This document specifies a version of the Kemeleon encoding that avoids any failu
 A KEM consists of three algorithms:
 
 - `KeyGen() -> (ek, dk)`: A probabilistic key generation algorithm that, with no input, generates an encapsulation key `ek` and a decapsulation key `dk`.
-- `Encaps(ek) -> (c, K)`: A probabilistic encapsulation algorithm that takes as input an encapsulation key `ek`, and outputs a ciphertext `ct` and shared secret `K`.
+- `Encaps(ek) -> (c, K)`: A probabilistic encapsulation algorithm that takes as input an encapsulation key `ek`, and outputs a ciphertext `c` and shared secret `K`.
 - `Decaps(dk, c) -> K`: A decapsulation algorithm that takes as input a decapsulation key `dk` and ciphertext `c`, and outputs a shared secret `K`.
 
 The following variables and functions are adopted from {{FIPS203}}:
@@ -121,7 +121,7 @@ The following variables and functions are adopted from {{FIPS203}}:
 
 `ML-KEM.KeyGen()` (Section 7.1 {{FIPS203}}) produces an encapsulation key, `ek` and a decapsulation key, `dk`.
 Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where each coefficient is encoded in 12 bits, together with a 32-byte seed for generating the matrix `A`.
-`ML-KEM.Encaps(ek)` (Section 7.2 {{FIPS203}}) produces ciphertexts consisting of byte-encoded compressed vectors of cofficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).
+`ML-KEM.Encaps(ek)` (Section 7.2 {{FIPS203}}) produces ciphertexts consisting of byte-encoded compressed vectors of coefficients, where each coefficient in Z_q is compressed by a certain number of bits (depending on the ML-KEM parameter set).
 
 The following terms and notation are used throughout this document:
 
@@ -220,7 +220,7 @@ The following algorithms encode ML-KEM encapsulation keys as random bytestrings.
 This is already a random 32-byte string, so it is returned alongside the encoded value of `t`.
 `t` is a vector of `k` polynomials with `n` coefficients.
 In an encapsulation key `ek`, the vector `t` is byte-encoded via `ByteEncode_12` {{FIPS203}}, meaning the polynomial coefficients must first be recovered by applying `ByteDecode_12`.
-We treat each polynomial in the resulting `t` as a vector of `n` coefficient, for which we apply `VectorEncode`.
+We treat each polynomial in the resulting `t` as a vector of `n` coefficients, for which we apply `VectorEncode`.
 From this, we obtain `k` values that are then concatenated.
 
 ~~~
@@ -240,7 +240,7 @@ Kemeleon.DecodeEk(eek):
    for i in range(k):
       t_i = VectorDecode(r_i)
       t.append(t_i)
-   return (ByteEncode_12(t), rho)
+   return concat(ByteEncode_12(t), rho)
 ~~~
 
 ## Encoding Ciphertexts {#ctxt-encoding}
@@ -276,7 +276,7 @@ Kemeleon.DecodeCtxt(ec):
    v = VectorDecode(r_k)
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
-   return (ByteEncode_du(c_1), ByteEncode_dv(c_2))
+   return concat(ByteEncode_du(c_1), ByteEncode_dv(c_2))
 ~~~
 
 ## Summary of Properties {#properties}
@@ -310,7 +310,7 @@ Kemeleon.EncodeEkR(ek):
 Kemeleon.DecodeEkR(eek):
    r,rho = eek # rho is fixed length
    t = VectorDecodeR(r,k)
-   return (ByteEncode_12(t), rho)
+   return concat(ByteEncode_12(t), rho)
 ~~~
 
 Both ciphertext components must first be decoded with `ByteDecode_du` and `ByteDecode_dv`.
@@ -338,7 +338,7 @@ Kemeleon.DecodeCtxtR(ec):
    r,c_2 = ec              # c_2 is fixed length
    u = VectorDecodeR(r,k)
    c_1 = Compress_du(u)
-   return (ByteEncode_du(c_1),c_2)
+   return concat(ByteEncode_du(c_1),c_2)
 ~~~
 
 This is a byte-aligned variant of the encoding as described in the original work {{GSV24}}, and has the following properties.
