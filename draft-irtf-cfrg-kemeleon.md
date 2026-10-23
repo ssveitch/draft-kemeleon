@@ -221,8 +221,9 @@ We treat each polynomial in the resulting `t` as a vector of `n` coefficient, fo
 From this, we obtain `k` values that are then concatenated.
 
 ~~~
-Kemeleon.EncodeEk(ek = (t, rho)):
-   t = ByteDecode_12(t)
+Kemeleon.EncodeEk(ek):
+   t = ByteDecode_12(ek[0:384*k])
+   rho = ek[384*k:384*k+32]
    for i in range(k):
       r_i = VectorEncode(t[i])
    r = concat(r_1,...,r_k)
@@ -248,9 +249,9 @@ Then, the same vector encoding step used for encapsulation keys can be applied.
 The two components `c_1` and `c_2` are byte-encoded in the ciphertext, via `ByteEncode_du` and `ByteEncode_dv`, respectively, meaning these must first be decoded using `ByteDecode_du` and `ByteDecode_dv` before the polynomial coefficients can be decompressed.
 
 ~~~
-Kemeleon.EncodeCtxt(c = (c_1,c_2)):
-   c_1 = ByteDecode_du(c_1)
-   c_2 = ByteDecode_dv(c_2)
+Kemeleon.EncodeCtxt(c):
+   c_1 = ByteDecode_du(c[0:32*du*k])
+   c_2 = ByteDecode_dv(c[32*du*k:32*(du*k+dv)])
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
@@ -295,16 +296,17 @@ The following algorithms make use of helper functions in {{helper-rejection}}.
 The encoding algorithms for encapsulation keys should handle errors accordingly, returning an error if `VectorEncodeR` returns an error.
 
 ~~~
-Kemeleon.EncodeEkR(ek = (t, rho)):
-   t = ByteDecode_12(t)
-   r = VectorEncodeR(t)
+Kemeleon.EncodeEkR(ek):
+   t = ByteDecode_12(ek[0:384*k])
+   rho = ek[384*k:384*k+32]
+   r = VectorEncodeR(t,k)
    return concat(r,rho)
 ~~~
 
 ~~~
 Kemeleon.DecodeEkR(eek):
    r,rho = eek # rho and each r_i is fixed length
-   t = VectorDecodeR(r)
+   t = VectorDecodeR(r,k)
    return (ByteEncode_12(t), rho)
 ~~~
 
@@ -312,14 +314,15 @@ Both ciphertext components must first be decoded with `ByteDecode_du` and `ByteD
 For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.
 
 ~~~
-Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
-   c_1 = ByteDecode_du(c_1)
+Kemeleon.EncodeCtxtR(c):
+   c_1 = ByteDecode_du(c[0:32*du*k])
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
    r = VectorEncodeR(u)
    if r == err:
       return err
+   c_2 = c[32*du*k:32*(du*k+dv)]
    a = ByteDecode_dv(c_2)
    for i from 1 to n:
       if a[i] == 0:
@@ -430,8 +433,8 @@ While the functionality of Kemeleon is similar to hash-to-curve {{RFC9380}} (map
 ## Modifying ML-KEM Algorithms {#direct-generation}
 
 In applications that _only_ require Kemeleon-encoded values _and_ where the underlying ML-KEM implementation can be modified, the ciphertext encoding algorithm (and ML-KEM encapsulation/decapsulation algorithms) MAY be adapted as follows for improved efficiency.
-In particular, the compression and byte-encoding steps in the ML-KEM encapsulation algorithm can be omitted, and therefore, the byte-decoding and decompression step in the Kemeleon algorithm can be omitted.
-In the implementation of ML-KEM, the compression and byte-encoding step (lines 22-23 of Algorithm 14 {{FIPS203}}) and corresponding byte-decoding and decompression step (lines 3-4 of Algorithm 15 {{FIPS203}}) can be omitted from the encapsulation/decapsulation algorithms in ML-KEM.
+In particular, the compression and byte-encoding steps in the ML-KEM encapsulation algorithm can be omitted, and therefore, the byte-decoding and decompression steps in the Kemeleon algorithm can be omitted.
+In the implementation of ML-KEM, the compression and byte-encoding steps (lines 22-23 of Algorithm 14 {{FIPS203}}) and corresponding byte-decoding and decompression steps (lines 3-4 of Algorithm 15 {{FIPS203}}) can be omitted from the encapsulation/decapsulation algorithms in ML-KEM.
 In this case, the Kemeleon encoding algorithm for ciphertexts omits the `ByteDecode`, `Decompress`, and `SamplePreimage` steps and immediately applies `VectorEncode`:
 
 ~~~
