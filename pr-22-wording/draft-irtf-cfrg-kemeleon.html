@@ -12,23 +12,23 @@
        This document specifies Kemeleon encoding algorithms for encoding ML-KEM encapsulation keys and ciphertexts as random bytestrings.
 Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, relying on module LWE assumptions. 
     " name="description">
-<meta content="xml2rfc 3.34.1" name="generator">
+<meta content="xml2rfc 3.35.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-irtf-cfrg-kemeleon-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.34.1
-    Python 3.14.7
-    ConfigArgParse 1.7.7
+  xml2rfc 3.35.0
+    Python 3.14.10
+    ConfigArgParse 1.9.0
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.11.10
+    platformdirs 4.14.3
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.8.4
+    wcwidth 0.9.4
 -->
 <link href="draft-irtf-cfrg-kemeleon.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1044,11 +1044,11 @@ svg {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Kemeleon</td>
-<td class="right">September 2026</td>
+<td class="right">November 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Günther, et al.</td>
-<td class="center">Expires 28 March 2027</td>
+<td class="center">Expires 9 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg {
 <dd class="internet-draft">draft-irtf-cfrg-kemeleon-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-09-24" class="published">24 September 2026</time>
+<time datetime="2026-11-05" class="published">5 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-03-28">28 March 2027</time></dd>
+<dd class="expires"><time datetime="2027-05-09">9 May 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1120,7 +1120,7 @@ Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, re
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 28 March 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 9 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1179,7 +1179,7 @@ Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, re
                 <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-smaller-outputs-from-reject" class="internal xref">Smaller Outputs from Rejection Sampling</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.1">
-                    <p id="section-toc.1-1.5.2.1.2.1.1"><a href="#section-5.1.1" class="auto internal xref">5.1.1</a>.  <a href="#name-helper-functions" class="internal xref">Helper Functions</a></p>
+                    <p id="section-toc.1-1.5.2.1.2.1.1"><a href="#section-5.1.1" class="auto internal xref">5.1.1</a>.  <a href="#name-vector-encoding-with-reject" class="internal xref">Vector Encoding with Rejection Sampling</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.2">
                     <p id="section-toc.1-1.5.2.1.2.2.1"><a href="#section-5.1.2" class="auto internal xref">5.1.2</a>.  <a href="#name-compressing-encapsulation-k" class="internal xref">Compressing Encapsulation Keys without Rejection Sampling</a></p>
@@ -1290,10 +1290,16 @@ appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶<
           <p id="section-3-4.3.1"><code>Decompress_d : y -&gt; round((q/2^d)*y)</code> (Equation 4.8 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>)<a href="#section-3-4.3.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-4.4">
-          <p id="section-3-4.4.1"><code>k = 2</code> for ML-KEM-512, <code>k = 3</code> for ML-KEM-768, <code>k = 4</code> for ML-KEM-1024<a href="#section-3-4.4.1" class="pilcrow">¶</a></p>
+          <p id="section-3-4.4.1"><code>ByteEncode_d</code>: encode a vector of coefficients into a byte string using <code>d</code> bits per coefficient (Algorithm 5 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>)<a href="#section-3-4.4.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-4.5">
-          <p id="section-3-4.5.1">remaining parameters <code>d_u</code>, <code>d_v</code>, etc. are defined by the respective ML-KEM parameter set (Table 2 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) -- this document writes <code>du</code> and <code>dv</code> in place of <code>d_u</code>, <code>d_v</code> in pseudocode<a href="#section-3-4.5.1" class="pilcrow">¶</a></p>
+          <p id="section-3-4.5.1"><code>ByteDecode_d</code>: decode a byte string into a vector of coefficients using <code>d</code> bits per coefficient (Algorithm 6 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>)<a href="#section-3-4.5.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-4.6">
+          <p id="section-3-4.6.1"><code>k = 2</code> for ML-KEM-512, <code>k = 3</code> for ML-KEM-768, <code>k = 4</code> for ML-KEM-1024<a href="#section-3-4.6.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-4.7">
+          <p id="section-3-4.7.1">remaining parameters <code>d_u</code>, <code>d_v</code>, etc. are defined by the respective ML-KEM parameter set (Table 2 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) -- this document writes <code>du</code> and <code>dv</code> in place of <code>d_u</code>, <code>d_v</code> in pseudocode<a href="#section-3-4.7.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <p id="section-3-5"><code>ML-KEM.KeyGen()</code> (Section 7.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) produces an encapsulation key, <code>ek</code> and a decapsulation key, <code>dk</code>.
@@ -1346,7 +1352,7 @@ Users <span class="bcp14">MAY</span> set the statistical-distance parameter <cod
 VectorEncode(a):
    r = 0
    t = 76   # stat. distance from uniform and byte-aligned
-   b = 2996 # ceil(n*log2(q))
+   b = 2996 # bit_length(q^n)
    for i from 1 to n:
       r += q^(i-1)*a[i]
    m &lt;--$ [0,...,floor( (2^(b+t)-1-r) / (q^(n)) )]
@@ -1378,7 +1384,7 @@ SamplePreimage(d,u,c):
          rand &lt;--$ [-2,-1,0,1]
       else:
          rand &lt;--$ [-1,0,1]
-      return u + rand
+      return (u + rand) % q
    if d == 11:
       if Compress_d(u + 1) == c:
          rand &lt;--$ [0,1]
@@ -1386,7 +1392,7 @@ SamplePreimage(d,u,c):
          rand &lt;--$ [-1,0]
       else:
          rand = 0
-      return u + rand
+      return (u + rand) % q
    if d == 5:
       if u == 0:
          rand &lt;--$ [-52,...,52]
@@ -1394,7 +1400,7 @@ SamplePreimage(d,u,c):
          rand &lt;--$ [-51,...,52]
       else:
          rand &lt;--$ [-52,...,51]
-      return u + rand
+      return (u + rand) % q
    if d == 4:
       if u == 0:
          rand &lt;--$ [-104,...,104]
@@ -1402,7 +1408,7 @@ SamplePreimage(d,u,c):
          rand &lt;--$ [-103,...,104]
       else:
          rand &lt;--$ [-104,...,103]
-      return u + rand
+      return (u + rand) % q
    else:
       return err
 </pre><a href="#section-4.1-6" class="pilcrow">¶</a>
@@ -1418,26 +1424,29 @@ SamplePreimage(d,u,c):
 <code>rho</code> is the public seed used to generate the public matrix <code>A</code> <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>.
 This is already a random 32-byte string, so it is returned alongside the encoded value of <code>t</code>.
 <code>t</code> is a vector of <code>k</code> polynomials with <code>n</code> coefficients.
-We treat each polynomial in <code>t</code> as a vector of <code>n</code> coefficient, for which we apply <code>VectorEncode</code>.
+In an encapsulation key <code>ek</code>, the vector <code>t</code> is byte-encoded via <code>ByteEncode_12</code> <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>, meaning the polynomial coefficients must first be recovered by applying <code>ByteDecode_12</code>.
+We treat each polynomial in the resulting <code>t</code> as a vector of <code>n</code> coefficient, for which we apply <code>VectorEncode</code>.
 From this, we obtain <code>k</code> values that are then concatenated.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.2-2">
 <pre>
-Kemeleon.EncodeEk(ek = (t, rho)):
+Kemeleon.EncodeEk(ek):
+   t = ByteDecode_12(ek[0:384*k])
+   rho = ek[384*k:384*k+32]
    for i in range(k):
       r_i = VectorEncode(t[i])
-   r = concat(r_1,...,r_k)
+   r = concat(r_0,...,r_(k-1))
    return concat(r,rho)
 </pre><a href="#section-4.2-2" class="pilcrow">¶</a>
 </div>
 <div class="alignLeft art-text artwork" id="section-4.2-3">
 <pre>
 Kemeleon.DecodeEk(eek):
-   r_1,..,r_k,rho = eek # rho and each r_i is fixed length
+   r_0,...,r_(k-1),rho = eek # rho and each r_i is fixed length
    t = []
    for i in range(k):
       t_i = VectorDecode(r_i)
       t.append(t_i)
-   return (t, rho)
+   return (ByteEncode_12(t), rho)
 </pre><a href="#section-4.2-3" class="pilcrow">¶</a>
 </div>
 </section>
@@ -1450,33 +1459,36 @@ Kemeleon.DecodeEk(eek):
 <p id="section-4.3-1">ML-KEM ciphertexts consist of two components: <code>c_1</code>, a vector of <code>k</code> polynomials with <code>n</code> coefficients mod <code>2^du</code>, and <code>c_2</code>, a polynomial with <code>n</code> coefficients mod <code>2^dv</code>.
 The coefficients of these polynomials are not uniformly distributed, as a result of the compression step in encapsulation.
 The following encoding function decompresses and recovers a random preimage of this compression step in order to recover the uniform distribution of coefficients.
-Then, the same vector encoding step used for encapsulation keys can be applied.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
+Then, the same vector encoding step used for encapsulation keys can be applied.
+The two components <code>c_1</code> and <code>c_2</code> are byte-encoded in the ciphertext, via <code>ByteEncode_du</code> and <code>ByteEncode_dv</code>, respectively, meaning these must first be decoded using <code>ByteDecode_du</code> and <code>ByteDecode_dv</code> before the polynomial coefficients can be decompressed.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.3-2">
 <pre>
-Kemeleon.EncodeCtxt(c = (c_1,c_2)):
+Kemeleon.EncodeCtxt(c):
+   c_1 = ByteDecode_du(c[0:32*du*k])
+   c_2 = ByteDecode_dv(c[32*du*k:32*(du*k+dv)])
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
    v = Decompress_dv(c_2)
    for i from 1 to n:
       v[i] = SamplePreimage(dv,v[i],c_2[i])
-   for i in range(k)
+   for i in range(k):
       r_i = VectorEncode(u[i])
-   r_(k+1) = VectorEncode(v)
-   r = concat(r_0,...,r_(k+1))
+   r_k = VectorEncode(v)
+   r = concat(r_0,...,r_k)
    return r
 </pre><a href="#section-4.3-2" class="pilcrow">¶</a>
 </div>
 <div class="alignLeft art-text artwork" id="section-4.3-3">
 <pre>
 Kemeleon.DecodeCtxt(r):
-   r_0,...,r_(k+1) = r # each r_i is fixed length
+   r_0,...,r_k = r # each r_i is fixed length
    for i in range(k):
       u[i] = VectorDecode(r_i)
-   v = VectorDecode(r_(k+1))
+   v = VectorDecode(r_k)
    c_1 = Compress_du(u)
    c_2 = Compress_dv(v)
-   return (c_1,c_2)
+   return (ByteEncode_du(c_1), ByteEncode_dv(c_2))
 </pre><a href="#section-4.3-3" class="pilcrow">¶</a>
 </div>
 </section>
@@ -1534,12 +1546,14 @@ Kemeleon.DecodeCtxt(r):
 <a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-smaller-outputs-from-reject" class="section-name selfRef">Smaller Outputs from Rejection Sampling</a>
         </h3>
 <p id="section-5.1-1">In applications willing to incur some probability of failure in encoding, the following variant of the encoding algorithms that result in smaller output sizes for encapsulation keys and ciphertexts can be used.
-The following algorithms make use of helper functions in <a href="#helper-rejection" class="auto internal xref">Section 5.1.1</a>.
+The following algorithms make use of <code>VectorEncodeR</code> and <code>VectorDecodeR</code>, defined in <a href="#helper-rejection" class="auto internal xref">Section 5.1.1</a>.
 The encoding algorithms for encapsulation keys should handle errors accordingly, returning an error if <code>VectorEncodeR</code> returns an error.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-5.1-2">
 <pre>
-Kemeleon.EncodeEkR(ek = (t, rho)):
-   r = VectorEncodeR(t)
+Kemeleon.EncodeEkR(ek):
+   t = ByteDecode_12(ek[0:384*k])
+   rho = ek[384*k:384*k+32]
+   r = VectorEncodeR(t,k)
    return concat(r,rho)
 </pre><a href="#section-5.1-2" class="pilcrow">¶</a>
 </div>
@@ -1547,22 +1561,26 @@ Kemeleon.EncodeEkR(ek = (t, rho)):
 <pre>
 Kemeleon.DecodeEkR(eek):
    r,rho = eek # rho and each r_i is fixed length
-   t = VectorDecodeR(r)
-   return (t, rho)
+   t = VectorDecodeR(r,k)
+   return (ByteEncode_12(t), rho)
 </pre><a href="#section-5.1-3" class="pilcrow">¶</a>
 </div>
-<p id="section-5.1-4">For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<p id="section-5.1-4">Both ciphertext components must first be decoded with <code>ByteDecode_du</code> and <code>ByteDecode_dv</code>.
+For ciphertexts, the second ciphertext component need not be decompressed, and rejection sampling can be used to retain uniformity instead.<a href="#section-5.1-4" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-5.1-5">
 <pre>
-Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
+Kemeleon.EncodeCtxtR(c):
+   c_1 = ByteDecode_du(c[0:32*du*k])
    u = Decompress_du(c_1)
    for i from 1 to k*n:
       u[i] = SamplePreimage(du,u[i],c_1[i])
-   r = VectorEncodeR(u)
+   r = VectorEncodeR(u,k)
    if r == err:
       return err
+   c_2 = c[32*du*k:32*(du*k+dv)]
+   a = ByteDecode_dv(c_2)
    for i from 1 to n:
-      if c_2[i] == 0:
+      if a[i] == 0:
          return err with prob. 1/ceil(q/(2^dv))
    return concat(r,c_2)
 </pre><a href="#section-5.1-5" class="pilcrow">¶</a>
@@ -1571,9 +1589,9 @@ Kemeleon.EncodeCtxtR(c = (c_1,c_2)):
 <pre>
 Kemeleon.DecodeCtxtR(ec):
    r,c_2 = ec              # c_2 is fixed length
-   u = VectorDecodeR(r)
+   u = VectorDecodeR(r,k)
    c_1 = Compress_du(u)
-   return (c_1,c_2)
+   return (ByteEncode_du(c_1),c_2)
 </pre><a href="#section-5.1-6" class="pilcrow">¶</a>
 </div>
 <p id="section-5.1-7">This is a byte-aligned variant of the encoding as described in the original work <span>[<a href="#GSV24" class="cite xref">GSV24</a>]</span>, and has the following properties.<a href="#section-5.1-7" class="pilcrow">¶</a></p>
@@ -1615,14 +1633,14 @@ Kemeleon.DecodeCtxtR(ec):
 </div>
 <div id="helper-rejection">
 <section id="section-5.1.1">
-          <h4 id="name-helper-functions">
-<a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-helper-functions" class="section-name selfRef">Helper Functions</a>
+          <h4 id="name-vector-encoding-with-reject">
+<a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-vector-encoding-with-reject" class="section-name selfRef">Vector Encoding with Rejection Sampling</a>
           </h4>
 <p id="section-5.1.1-1">The following algorithms <code>VectorEncodeR</code> and <code>VectorDecodeR</code> are used for vector encoding.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
 <p id="section-5.1.1-2">Encoding in this case accumulates all <code>k</code> polynomials into one large integer <code>r</code> and rejects if the most significant bit <code>msb(r)</code> is <code>1</code>.
 The unused top bits of <code>r</code> (when represented in network byte order) are randomized to ensure a fully byte-aligned random output.
 In this variant, it is no longer feasible to parallelize the encoding of the <code>k</code> polynomials; these must be treated as a single vector of <code>k*n</code> coefficients in order to achieve a reasonable rate of rejection.
-Therefore, this approach also requires arithmetic over larger integers (up to <code>ceil(log2(q^(4n))) = 11,982</code> bit integers for ML-KEM-1024, where <code>k = 4</code>).<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
+Therefore, this approach also requires arithmetic over larger integers (up to <code>bit_length(q^(4n)) = 11,982</code> bit integers for ML-KEM-1024).<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-5.1.1-3">
 <pre>
 VectorEncodeR(a,k):
@@ -1631,47 +1649,26 @@ VectorEncodeR(a,k):
       r += q^(i-1)*a[i]
    if msb(r) == 1:
       return err
-   r = IntegerRandomizeUnused(r,k)
+    b = bit_length(q^(k*n)) - 1    # bit length of r, after acceptance
+         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
+   B = ceil(b/8)                # byte-aligned size of r, in bytes
+   x = B*8 - b                  # number of unused bits
+   rand &lt;--$ [0,...,2^x - 1]
+   r = r | (rand &lt;&lt; b)          # randomize unused bits
    return r
 </pre><a href="#section-5.1.1-3" class="pilcrow">¶</a>
 </div>
 <div class="alignLeft art-text artwork" id="section-5.1.1-4">
 <pre>
 VectorDecodeR(r,k):
-   r = IntegerClearUnused(r,k)
+   b = bit_length(q^(k*n)) - 1    # bit length of r
+         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
+   r = r &amp; (2^b - 1)            # clear unused bits
    for i from 1 to k*n:
       a[i] = r % q
       r = r // q
    return a
 </pre><a href="#section-5.1.1-4" class="pilcrow">¶</a>
-</div>
-<p id="section-5.1.1-5">The following helper functions randomize resp. clear the unused bits of the top byte of an integer <code>r</code> (represented in network byte order) produced in <code>VectorEncodeR</code>.<a href="#section-5.1.1-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-5.1.1-6">
-<pre>
-IntegerRandomizeUnused(r,k):
-   b = floor(log2(q^(k*n)))    # bit size of r, without msb(r) = 0
-         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   x = 8 - (b % 8)             # number of unused bits
-   r_bytes = to_bytes(r)       # network byte order
-   mask = 0xFF &lt;&lt; (8 - x) &amp; 0xFF
-   rand = random_byte(1)       # sample 1 byte uniformly random
-   r_bytes[0] = r_bytes[0] | (rand &amp; mask)
-   r = from_bytes(r_bytes)
-   return r
-</pre><a href="#section-5.1.1-6" class="pilcrow">¶</a>
-</div>
-<div class="alignLeft art-text artwork" id="section-5.1.1-7">
-<pre>
-IntegerClearUnused(r,k):
-   b = floor(log2(q^(k*n)))    # bit size of target integer, without msb(r) = 0
-         # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   x = 8 - (b % 8)             # number of randomized bits
-   r_bytes = to_bytes(r)       # network byte order
-   mask = 0xFF &gt;&gt; x
-   r_bytes[0] = r_bytes[0] &amp; mask
-   r = from_bytes(r_bytes)
-   return r
-</pre><a href="#section-5.1.1-7" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1726,14 +1723,16 @@ See <a href="#randomness-security" class="auto internal xref">Section 6.2</a> fo
 <a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-modifying-ml-kem-algorithms" class="section-name selfRef">Modifying ML-KEM Algorithms</a>
         </h3>
 <p id="section-5.4-1">In applications that <em>only</em> require Kemeleon-encoded values <em>and</em> where the underlying ML-KEM implementation can be modified, the ciphertext encoding algorithm (and ML-KEM encapsulation/decapsulation algorithms) <span class="bcp14">MAY</span> be adapted as follows for improved efficiency.
-In particular, the compression step in the ML-KEM encapsulation algorithm can be omitted, and therefore, the decompression step in the Kemeleon algorithm can be omitted.
-In the implementation of ML-KEM, the compression step (lines 22-23 of Algorithm 14 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) and corresponding decompression step (lines 3-4 of Algorithm 15 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) can be omitted from the encapsulation/decapsulation algorithms in ML-KEM.
-In this case, the Kemeleon encoding algorithm for ciphertexts would omit the <code>Decompress</code> and <code>SamplePreimage</code> steps and immediately apply <code>VectorEncode</code>:<a href="#section-5.4-1" class="pilcrow">¶</a></p>
+In particular, the compression and byte-encoding steps in the ML-KEM encapsulation algorithm can be omitted, and therefore, the byte-decoding and decompression steps in the Kemeleon algorithm can be omitted.
+In the implementation of ML-KEM, the compression and byte-encoding steps (lines 22-23 of Algorithm 14 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) and corresponding byte-decoding and decompression steps (lines 3-4 of Algorithm 15 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>) can be omitted from the encapsulation/decapsulation algorithms in ML-KEM.
+In this case, the Kemeleon encoding algorithm for ciphertexts omits the <code>ByteDecode</code>, <code>Decompress</code>, and <code>SamplePreimage</code> steps and immediately applies <code>VectorEncode</code>:<a href="#section-5.4-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-5.4-2">
 <pre>
 Kemeleon.EncodeCtxt(c = (c_1,c_2)):
-   w = [c_1,c_2] # treat c_1,c_2 as a singular vector of (k+1)*n coefficients
-   r = VectorEncode(w,k+1)
+   w = [c_1[0],...,c_1[k-1],c_2]
+   for i in range(k+1):
+      r_i = VectorEncode(w[i])
+   r = concat(r_0,...,r_k)
    return r
 </pre><a href="#section-5.4-2" class="pilcrow">¶</a>
 </div>
@@ -1741,11 +1740,16 @@ Kemeleon.EncodeCtxt(c = (c_1,c_2)):
 <div class="alignLeft art-text artwork" id="section-5.4-4">
 <pre>
 Kemeleon.DecodeCtxt(ec):
-   w = VectorDecode(r,k+1)
-   c_1,c_2 = w # c_1, c_2 are fixed length
+   r_0,...,r_k = ec # each r_i is fixed length
+   for i in range(k+1):
+      w[i] = VectorDecode(r_i)
+   c_1 = [w[0],...,w[k-1]]
+   c_2 = w[k]
    return (c_1,c_2)
 </pre><a href="#section-5.4-4" class="pilcrow">¶</a>
 </div>
+<p id="section-5.4-5">The same applies to encapsulation keys, which are byte-encoded but not compressed: a modified <code>KeyGen</code> that exposes <code>t</code> directly lets <code>EncodeEk</code> skip <code>ByteDecode_12</code> and <code>DecodeEk</code> skip <code>ByteEncode_12</code>.
+However, <code>ByteEncode_12</code> cannot be dropped entirely in <code>KeyGen</code> itself, as its output is used to compute <code>H(ek)</code> for the Fujisaki-Okamoto transform (Algorithms 16-18 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>).<a href="#section-5.4-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
