@@ -24,6 +24,7 @@ Q_N = Q**N
 POLY_BYTES = 384
 RHO_BYTES = 32
 PARAMETERS = {
+    "ML-KEM-512": 2,
     "ML-KEM-768": 3,
     "ML-KEM-1024": 4,
 }
@@ -137,6 +138,8 @@ def verify_vector(vector: dict) -> str:
     parse_bytes(vector["z"], f"{name}.z", 32)
     require(isinstance(vector["m"], list), f"{name}: m must be an array")
     require(len(vector["m"]) == k, f"{name}: incorrect m count")
+    require(isinstance(vector.get("m_max"), list), f"{name}: m_max must be an array")
+    require(len(vector["m_max"]) == k, f"{name}: incorrect m_max count")
 
     expected_fields = []
     for i, encoded_m in enumerate(vector["m"]):
@@ -144,7 +147,13 @@ def verify_vector(vector: dict) -> str:
         residue = accumulate(coefficients)
         m = parse_integer(encoded_m, f"{name}.m[{i}]")
         max_m = (2 ** (B + t) - 1 - residue) // Q_N
+        recorded_max = parse_integer(vector["m_max"][i], f"{name}.m_max[{i}]")
+        require(recorded_max == max_m, f"{name}: incorrect m_max[{i}]")
         require(0 <= m <= max_m, f"{name}: m[{i}] outside the sampling bound")
+        if name.endswith("-m-zero"):
+            require(m == 0, f"{name}: m[{i}] is not zero")
+        if name.endswith("-m-max"):
+            require(m == max_m, f"{name}: m[{i}] is not the maximum")
         encoded = (residue + m * Q_N).to_bytes(field_bytes, "little")
         expected_fields.append(encoded)
 
@@ -159,16 +168,24 @@ def main() -> None:
     path = Path(__file__).with_name("encode-ek.json")
     document = json.loads(path.read_text())
     counts = Counter()
+    bound_branches = {76: set(), 132: set()}
     names = set()
 
     for vector in document["vectors"]:
         require(vector["name"] not in names, f"duplicate vector name: {vector['name']}")
         names.add(vector["name"])
         kind = verify_vector(vector)
+        if kind == "encode" and vector["t"] in bound_branches:
+            g = (2 ** (B + vector["t"]) - 1) // Q_N
+            bound_branches[vector["t"]].update(g - int(value, 16) for value in vector["m_max"])
         counts[(vector["kem"], vector["t"], kind)] += 1
 
     expected = Counter(
         {
+            ("ML-KEM-512", 76, "encode"): 3,
+            ("ML-KEM-512", 76, "decode-only"): 3,
+            ("ML-KEM-768", 76, "encode"): 3,
+            ("ML-KEM-768", 76, "decode-only"): 3,
             ("ML-KEM-768", 132, "encode"): 3,
             ("ML-KEM-768", 132, "decode-only"): 3,
             ("ML-KEM-1024", 76, "encode"): 3,
@@ -178,7 +195,9 @@ def main() -> None:
         }
     )
     require(counts == expected, f"unexpected profile/count map: {counts}")
-    print(f"verified {len(names)} EncodeEk/DecodeEk vectors across 3 profiles")
+    for t, branches in bound_branches.items():
+        require(branches == {0, 1}, f"t={t}: missing g or g-1 sampling-bound coverage")
+    print(f"verified {len(names)} EncodeEk/DecodeEk vectors across 5 profiles")
 
 
 if __name__ == "__main__":
