@@ -127,7 +127,8 @@ The following terms and notation are used throughout this document:
 
 - `a[i]` denotes the `i`th position of a vector `a` of coefficients.
 - `concat(x0, ..., xN)`: returns the concatenation of bytestrings.
-- `to_bytes(x,L)` and `from_bytes(y)` encode/decode an integer `x` to a bytestring `y` of length `L` bytes in little-endian order.
+- `to_bytes(x,L)`: for an integer `0 <= x < 256^L` returns the `L`-byte string `y` with `y[i] = floor(x/256^i) mod 256` for `0 <= i < L` (little-endian order).
+- `from_bytes(y)`: for a bytestring `y` of length `L`, returns the integer `sum(y[i]*256^i for 0 <= i < L)`.
 
 # Kemeleon Encoding {#kemeleon}
 
@@ -140,34 +141,37 @@ At a high level, the constructions in this document instantiate the following fu
 
 ## Common Functions {#common-func}
 
-The following function `VectorEncode` maps a vector of length `n` of coefficients modulo `q` to a large integer `r` such that `r` is byte-aligned and (statistically close to) uniformly distributed.
-`VectorEncode` first accumulates the coefficients into a large integer `r` and then, applying the technique from {{ELL2}}, adds `m * q^n`,
-where `m` is chosen at random from `[0,floor((2^(b+t)-1-r)/(q^n))]`.
-This results in an encoded output value byte-aligned to `384` bytes (the same size as the standard ML-KEM vector encoding)
+The following function `VectorEncode` maps a vector of length `n` of coefficients modulo `q` to a bytestring of `(b+t)/8` bytes that is (statistically close to) uniformly distributed, where `b=2996` is the bit length of `q^n` and `t` is a statistical-distance parameter.
+`VectorEncode` first accumulates the coefficients into a large integer `x` and then, applying the technique from {{ELL2}}, adds `m * q^n`,
+where `m` is chosen at random from `[0,floor((2^(b+t)-1-x)/(q^n))]`.
+The resulting integer is encoded as a little-endian bytestring.
+
+With the default `t = 76`, this results in an encoded output value byte-aligned to `384` bytes (the same size as the standard ML-KEM vector encoding)
 whose statistical distance from uniform is at most `2^-76`.
-Users MAY set the statistical-distance parameter `t` to `t = 76 + 8x` for a positive integer x to obtain a smaller statistical distance.
+Users MAY set the statistical-distance parameter `t` to `t = 76 + 8j` for a positive integer `j` to obtain a smaller statistical distance and maintain byte alignment.
+Unless otherwise noted, the remainder of this document assumes `t = 76`.
 
 ~~~
 VectorEncode(a):
-   r = 0
+   x = 0
    t = 76   # stat. distance from uniform and byte-aligned
    b = 2996 # bit_length(q^n)
    for i from 1 to n:
-      r += q^(i-1)*a[i]
-   m <--$ [0,...,floor( (2^(b+t)-1-r) / (q^(n)) )]
-   r = r + m*q^n
-   return to_bytes(r,(b+t)/8) # little endian, (b+t)/8 bytes
+      x += q^(i-1)*a[i]
+   m <--$ [0,...,floor( (2^(b+t)-1-x) / (q^(n)) )]
+   y = x + m*q^n
+   return to_bytes(y,(b+t)/8) # little endian, (b+t)/8 bytes
 ~~~
 
 The following function `VectorDecode` inverts the above mapping.
 
 ~~~
 VectorDecode(r):
-   r = from_bytes(r) # little endian
-   r = r % q^n
+   y = from_bytes(r) # little endian
+   x = y % q^n
    for i from 1 to n:
-      a[i] = r % q
-      r = r // q
+      a[i] = x % q
+      x = x // q
    return a
 ~~~
 
@@ -355,36 +359,36 @@ This is a byte-aligned variant of the encoding as described in the original work
 
 The following algorithms `VectorEncodeR` and `VectorDecodeR` are used for vector encoding.
 
-Encoding in this case accumulates all `k` polynomials into one large integer `r` and rejects if the most significant bit `msb(r)` is `1`.
-The unused most significant bits of `r` are randomized to ensure a fully byte-aligned random output.
+Encoding in this case accumulates all `k` polynomials into one large integer `x` and rejects if `x >= 2^b` where `b = bit_length(q^(k*n)) - 1`.
+The unused most significant bits are randomized to ensure a fully byte-aligned random output.
 In this variant, it is no longer feasible to parallelize the encoding of the `k` polynomials; these must be treated as a single vector of `k*n` coefficients in order to achieve a reasonable rate of rejection.
 Therefore, this approach also requires arithmetic over larger integers (up to `bit_length(q^(4n)) = 11,982` bit integers for ML-KEM-1024).
 
 ~~~
 VectorEncodeR(a,k):
-   r = 0
+   x = 0
    for i from 1 to k*n:
-      r += q^(i-1)*a[i]
-   if msb(r) == 1:
-      return err
-   b = bit_length(q^(k*n)) - 1   # bit length of r, after acceptance
+      x += q^(i-1)*a[i]
+   b = bit_length(q^(k*n)) - 1
          # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   B = ceil(b/8)                # byte-aligned size of r, in bytes
-   x = B*8 - b                  # number of unused bits
-   rand <--$ [0,...,2^x - 1]
-   r = r | (rand << b)          # randomize unused bits
-   return to_bytes(r,B)         # little endian, B bytes
+   if x >= 2^b:
+      return err
+   B = ceil(b/8)                # byte-aligned size of output, in bytes
+   pad = B*8 - b                # number of unused bits
+   rand <--$ [0,...,2^pad - 1]
+   y = x | (rand << b)          # randomize unused bits
+   return to_bytes(y,B)         # little endian, B bytes
 ~~~
 
 ~~~
 VectorDecodeR(r,k):
-   b = bit_length(q^(k*n)) - 1   # bit length of r after clearing unused bits
+   b = bit_length(q^(k*n)) - 1   # bit length after clearing unused bits
          # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   r = from_bytes(r)             # little endian
-   r = r & (2^b - 1)             # clear unused bits
+   y = from_bytes(r)             # little endian
+   x = y & (2^b - 1)             # clear unused bits
    for i from 1 to k*n:
-      a[i] = r % q
-      r = r // q
+      a[i] = x % q
+      x = x // q
    return a
 ~~~
 
