@@ -12,23 +12,23 @@
        This document specifies Kemeleon encoding algorithms for encoding ML-KEM encapsulation keys and ciphertexts as random bytestrings.
 Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, relying on module LWE assumptions. 
     " name="description">
-<meta content="xml2rfc 3.34.1" name="generator">
+<meta content="xml2rfc 3.35.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
 <meta content="draft-irtf-cfrg-kemeleon-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.34.1
-    Python 3.14.8
-    ConfigArgParse 1.8.0
+  xml2rfc 3.35.0
+    Python 3.14.10
+    ConfigArgParse 1.9.0
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
     lxml 6.1.1
     natsort 8.4.0
-    platformdirs 4.13.4
+    platformdirs 4.14.3
     pycountry 24.6.1
     PyYAML 6.0.3
     requests 2.33.1
-    wcwidth 0.9.2
+    wcwidth 0.9.4
 -->
 <link href="draft-irtf-cfrg-kemeleon.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -1029,7 +1029,7 @@ svg {
   & :is([stroke="white"], [stroke^="#fff"]) {
     stroke: var(--background-color);
   }
-  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+  & :is([fill="black"], [fill^="#000"], :not([fill], [fill] *)) {
     fill: var(--text-color);
   }
   & :is([fill="white"], [fill^="#fff"]) {
@@ -1044,11 +1044,11 @@ svg {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Kemeleon</td>
-<td class="right">October 2026</td>
+<td class="right">November 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Günther, et al.</td>
-<td class="center">Expires 26 April 2027</td>
+<td class="center">Expires 10 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,12 +1061,12 @@ svg {
 <dd class="internet-draft">draft-irtf-cfrg-kemeleon-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-10-23" class="published">23 October 2026</time>
+<time datetime="2026-11-06" class="published">6 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-04-26">26 April 2027</time></dd>
+<dd class="expires"><time datetime="2027-05-10">10 May 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1120,7 +1120,7 @@ Kemeleon encodings provide obfuscation of encapsulation keys and ciphertexts, re
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 26 April 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 10 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1314,7 +1314,10 @@ Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where
           <p id="section-3-7.2.1"><code>concat(x0, ..., xN)</code>: returns the concatenation of bytestrings.<a href="#section-3-7.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-3-7.3">
-          <p id="section-3-7.3.1"><code>to_bytes(x,L)</code> and <code>from_bytes(y)</code> encode/decode an integer <code>x</code> to a bytestring <code>y</code> of length <code>L</code> bytes in little-endian order.<a href="#section-3-7.3.1" class="pilcrow">¶</a></p>
+          <p id="section-3-7.3.1"><code>to_bytes(x,L)</code>: for an integer <code>0 &lt;= x &lt; 256^L</code> returns the <code>L</code>-byte string <code>y</code> with <code>y[i] = floor(x/256^i) mod 256</code> for <code>0 &lt;= i &lt; L</code> (little-endian order).<a href="#section-3-7.3.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-3-7.4">
+          <p id="section-3-7.4.1"><code>from_bytes(y)</code>: for a bytestring <code>y</code> of length <code>L</code>, returns the integer <code>sum(y[i]*256^i for 0 &lt;= i &lt; L)</code>.<a href="#section-3-7.4.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 </section>
@@ -1344,41 +1347,43 @@ Encapsulation keys consist of byte-encoded vectors of coefficients in Z_q, where
         <h3 id="name-common-functions">
 <a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-common-functions" class="section-name selfRef">Common Functions</a>
         </h3>
-<p id="section-4.1-1">The following function <code>VectorEncode</code> maps a vector of length <code>n</code> of coefficients modulo <code>q</code> to a large integer <code>r</code> such that <code>r</code> is byte-aligned and (statistically close to) uniformly distributed.
-<code>VectorEncode</code> first accumulates the coefficients into a large integer <code>r</code> and then, applying the technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span>, adds <code>m * q^n</code>,
-where <code>m</code> is chosen at random from <code>[0,floor((2^(b+t)-1-r)/(q^n))]</code>.
-This results in an encoded output value byte-aligned to <code>384</code> bytes (the same size as the standard ML-KEM vector encoding)
+<p id="section-4.1-1">The following function <code>VectorEncode</code> maps a vector of length <code>n</code> of coefficients modulo <code>q</code> to a bytestring of <code>(b+t)/8</code> bytes that is (statistically close to) uniformly distributed, where <code>b=2996</code> is the bit length of <code>q^n</code> and <code>t</code> is a statistical-distance parameter.
+<code>VectorEncode</code> first accumulates the coefficients into a large integer <code>x</code> and then, applying the technique from <span>[<a href="#ELL2" class="cite xref">ELL2</a>]</span>, adds <code>m * q^n</code>,
+where <code>m</code> is chosen at random from <code>[0,floor((2^(b+t)-1-x)/(q^n))]</code>.
+The resulting integer is encoded as a little-endian bytestring.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2">With the default <code>t = 76</code>, this results in an encoded output value byte-aligned to <code>384</code> bytes (the same size as the standard ML-KEM vector encoding)
 whose statistical distance from uniform is at most <code>2^-76</code>.
-Users <span class="bcp14">MAY</span> set the statistical-distance parameter <code>t</code> to <code>t = 76 + 8x</code> for a positive integer x to obtain a smaller statistical distance.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-2">
+Users <span class="bcp14">MAY</span> set the statistical-distance parameter <code>t</code> to <code>t = 76 + 8j</code> for a positive integer <code>j</code> to obtain a smaller statistical distance and maintain byte alignment.
+Unless otherwise noted, the remainder of this document assumes <code>t = 76</code>.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-3">
 <pre>
 VectorEncode(a):
-   r = 0
+   x = 0
    t = 76   # stat. distance from uniform and byte-aligned
    b = 2996 # bit_length(q^n)
    for i from 1 to n:
-      r += q^(i-1)*a[i]
-   m &lt;--$ [0,...,floor( (2^(b+t)-1-r) / (q^(n)) )]
-   r = r + m*q^n
-   return to_bytes(r,(b+t)/8) # little endian, (b+t)/8 bytes
-</pre><a href="#section-4.1-2" class="pilcrow">¶</a>
+      x += q^(i-1)*a[i]
+   m &lt;--$ [0,...,floor( (2^(b+t)-1-x) / (q^(n)) )]
+   y = x + m*q^n
+   return to_bytes(y,(b+t)/8) # little endian, (b+t)/8 bytes
+</pre><a href="#section-4.1-3" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-3">The following function <code>VectorDecode</code> inverts the above mapping.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-4">
+<p id="section-4.1-4">The following function <code>VectorDecode</code> inverts the above mapping.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-5">
 <pre>
 VectorDecode(r):
-   r = from_bytes(r) # little endian
-   r = r % q^n
+   y = from_bytes(r) # little endian
+   x = y % q^n
    for i from 1 to n:
-      a[i] = r % q
-      r = r // q
+      a[i] = x % q
+      x = x // q
    return a
-</pre><a href="#section-4.1-4" class="pilcrow">¶</a>
+</pre><a href="#section-4.1-5" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-5">The following algorithm <code>SamplePreimage</code> samples an uncompressed pre-image of a coefficient <code>c</code> at random, where <code>u</code> is the decompressed value of <code>c</code>.
+<p id="section-4.1-6">The following algorithm <code>SamplePreimage</code> samples an uncompressed pre-image of a coefficient <code>c</code> at random, where <code>u</code> is the decompressed value of <code>c</code>.
 It must take as input values of <code>u</code> that are output from <code>Decompress_d</code>.
-The mapping is based on the <code>Compress_d</code>, <code>Decompress_d</code> algorithms from (Section 4.2.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>).<a href="#section-4.1-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.1-6">
+The mapping is based on the <code>Compress_d</code>, <code>Decompress_d</code> algorithms from (Section 4.2.1 <span>[<a href="#FIPS203" class="cite xref">FIPS203</a>]</span>).<a href="#section-4.1-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.1-7">
 <pre>
 SamplePreimage(d,u,c):
    if d == 10:
@@ -1415,7 +1420,7 @@ SamplePreimage(d,u,c):
       return (u + rand) % q
    else:
       return err
-</pre><a href="#section-4.1-6" class="pilcrow">¶</a>
+</pre><a href="#section-4.1-7" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -1641,37 +1646,37 @@ Kemeleon.DecodeCtxtR(ec):
 <a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-vector-encoding-with-reject" class="section-name selfRef">Vector Encoding with Rejection Sampling</a>
           </h4>
 <p id="section-5.1.1-1">The following algorithms <code>VectorEncodeR</code> and <code>VectorDecodeR</code> are used for vector encoding.<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
-<p id="section-5.1.1-2">Encoding in this case accumulates all <code>k</code> polynomials into one large integer <code>r</code> and rejects if the most significant bit <code>msb(r)</code> is <code>1</code>.
-The unused most significant bits of <code>r</code> are randomized to ensure a fully byte-aligned random output.
+<p id="section-5.1.1-2">Encoding in this case accumulates all <code>k</code> polynomials into one large integer <code>x</code> and rejects if <code>x &gt;= 2^b</code> where <code>b = bit_length(q^(k*n)) - 1</code>.
+The unused most significant bits are randomized to ensure a fully byte-aligned random output.
 In this variant, it is no longer feasible to parallelize the encoding of the <code>k</code> polynomials; these must be treated as a single vector of <code>k*n</code> coefficients in order to achieve a reasonable rate of rejection.
 Therefore, this approach also requires arithmetic over larger integers (up to <code>bit_length(q^(4n)) = 11,982</code> bit integers for ML-KEM-1024).<a href="#section-5.1.1-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-5.1.1-3">
 <pre>
 VectorEncodeR(a,k):
-   r = 0
+   x = 0
    for i from 1 to k*n:
-      r += q^(i-1)*a[i]
-   if msb(r) == 1:
-      return err
-   b = bit_length(q^(k*n)) - 1   # bit length of r, after acceptance
+      x += q^(i-1)*a[i]
+   b = bit_length(q^(k*n)) - 1
          # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   B = ceil(b/8)                # byte-aligned size of r, in bytes
-   x = B*8 - b                  # number of unused bits
-   rand &lt;--$ [0,...,2^x - 1]
-   r = r | (rand &lt;&lt; b)          # randomize unused bits
-   return to_bytes(r,B)         # little endian, B bytes
+   if x &gt;= 2^b:
+      return err
+   B = ceil(b/8)                # byte-aligned size of output, in bytes
+   pad = B*8 - b                # number of unused bits
+   rand &lt;--$ [0,...,2^pad - 1]
+   y = x | (rand &lt;&lt; b)          # randomize unused bits
+   return to_bytes(y,B)         # little endian, B bytes
 </pre><a href="#section-5.1.1-3" class="pilcrow">¶</a>
 </div>
 <div class="alignLeft art-text artwork" id="section-5.1.1-4">
 <pre>
 VectorDecodeR(r,k):
-   b = bit_length(q^(k*n)) - 1   # bit length of r after clearing unused bits
+   b = bit_length(q^(k*n)) - 1   # bit length after clearing unused bits
          # b=5990 if k=2, b=8986 if k=3, b=11981 if k=4
-   r = from_bytes(r)             # little endian
-   r = r &amp; (2^b - 1)             # clear unused bits
+   y = from_bytes(r)             # little endian
+   x = y &amp; (2^b - 1)             # clear unused bits
    for i from 1 to k*n:
-      a[i] = r % q
-      r = r // q
+      a[i] = x % q
+      x = x // q
    return a
 </pre><a href="#section-5.1.1-4" class="pilcrow">¶</a>
 </div>
